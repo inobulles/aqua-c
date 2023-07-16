@@ -1,0 +1,12 @@
+task:
+  arm_container:
+    image: gcc:latest
+  env:
+    CLICOLOR_FORCE:
+  bob_script:
+    - git clone https://github.com/inobulles/bob --depth 1 --branch main
+    - ( cd bob && sh build.sh && sh-bin/bob install )
+  build_script:
+    - bob build
+  arm64_artifacts:
+    path: "bin/*"
