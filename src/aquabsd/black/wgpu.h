@@ -11,7 +11,7 @@
 
 #include "wgpu_types.h"
 
-static uint64_t wgpu_device = -1;
+static device_t wgpu_device = -1;
 
 static int wgpu_init(void) {
 	wgpu_device = query_device("aquabsd.black.wgpu");
