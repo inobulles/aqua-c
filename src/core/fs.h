@@ -27,7 +27,7 @@ typedef enum {
 
 #define FS_OPEN_ERR 0
 
-static device_t fs_device = -1;
+static device_t fs_device = NO_DEVICE;
 
 static fs_descr_t fs_open(char const* drive, char const* path, fs_flags_t flags) {
 	fs_device = query_device("core.fs");
