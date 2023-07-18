@@ -20,13 +20,13 @@ static err_t win_create(win_t* win, uint64_t x_res, uint64_t y_res) {
 	win->device = query_device("aquabsd.alps.win");
 
 	if (win->device == NO_DEVICE) {
-		return -ERR_NO_DEVICE;
+		return ERR_NO_DEVICE;
 	}
 
 	win->internal_win = send_device(win->device, WIN_CMD_CREATE, (uint64_t[]) { x_res, y_res });
 
 	if (!win->internal_win || win->internal_win == INTERNAL_ERROR) {
-		return -ERR_INTERNAL;
+		return ERR_INTERNAL;
 	}
 
 	return SUCCESS;

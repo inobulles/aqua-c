@@ -11,9 +11,9 @@
 #define INTERNAL_ERROR ((uint64_t) -1)
 
 typedef enum {
-	SUCCESS,
-	ERR_NO_DEVICE,
-	ERR_INTERNAL,
+	SUCCESS = 0,
+	ERR_NO_DEVICE = -1,
+	ERR_INTERNAL = -2,
 } err_t;
 
 typedef uint64_t device_t;
