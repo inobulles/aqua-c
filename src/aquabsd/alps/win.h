@@ -23,7 +23,7 @@ static err_t win_create(win_t* win, uint64_t x_res, uint64_t y_res) {
 		return ERR_NO_DEVICE;
 	}
 
-	win->internal_win = send_device(win->device, WIN_CMD_CREATE, (uint64_t[]) { x_res, y_res });
+	win->internal_win = SEND_DEVICE(win->device, WIN_CMD_CREATE, x_res, y_res);
 
 	if (!win->internal_win || win->internal_win == INTERNAL_ERROR) {
 		return ERR_INTERNAL;
@@ -33,12 +33,12 @@ static err_t win_create(win_t* win, uint64_t x_res, uint64_t y_res) {
 }
 
 static void win_destroy(win_t* win) {
-	send_device(win->device, WIN_CMD_DESTROY, (uint64_t[]) { win->internal_win });
+	SEND_DEVICE(win->device, WIN_CMD_DESTROY, win->internal_win);
 }
 
 static int win_set_caption(win_t* win, char* caption) {
-	if (send_device(win->device, WIN_CMD_SET_CAPTION, (uint64_t[]) { win->internal_win, (uint64_t) caption }) == INTERNAL_ERROR) {
-		return -ERR_INTERNAL;
+	if (SEND_DEVICE(win->device, WIN_CMD_SET_CAPTION, win->internal_win, (uint64_t) caption) == INTERNAL_ERROR) {
+		return ERR_INTERNAL;
 	}
 
 	return SUCCESS;

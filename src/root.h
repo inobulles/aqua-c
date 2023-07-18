@@ -51,6 +51,9 @@ static uint64_t send_device(device_t device, uint16_t cmd, void* data) {
 	return kos_send_device(0, device, (uint64_t) cmd, (uint64_t) data);
 }
 
+#define SEND_DEVICE(device, cmd, ...) \
+	(send_device((device), (cmd), (uint64_t[]) { __VA_ARGS__ }))
+
 static char const* err_str(err_t err) {
 	switch (err) {
 	case SUCCESS:       return "success";
