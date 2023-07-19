@@ -16,6 +16,8 @@ typedef enum {
 	WIN_CMD_SET_CAPTION = 0x7363,
 	WIN_CMD_REGISTER_CB = 0x7263,
 	WIN_CMD_LOOP        = 0x6C6F,
+	WIN_CMD_GET_X_RES   = 0x7872,
+	WIN_CMD_GET_Y_RES   = 0x7972,
 } win_cmd_t;
 
 typedef enum {
@@ -65,4 +67,12 @@ static err_t win_loop(win_t* win) {
 	}
 
 	return SUCCESS;
+}
+
+static uint64_t win_get_x_res(win_t* win) {
+	return SEND_DEVICE(win->device, WIN_CMD_GET_X_RES, (uint64_t) win->internal_win);
+}
+
+static uint64_t win_get_y_res(win_t* win) {
+	return SEND_DEVICE(win->device, WIN_CMD_GET_Y_RES, (uint64_t) win->internal_win);
 }
