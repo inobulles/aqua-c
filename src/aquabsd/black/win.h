@@ -5,24 +5,62 @@
 
 #include <root.h>
 
-typedef uint64_t win_t;
+#include <stdbool.h>
 
-static device_t win_device = NO_DEVICE;
+typedef struct {
+	device_t device;
+	uint64_t internal_win;
+} win_t;
 
-static int win_init(void) {
-	win_device = query_device("aquabsd.black.win");
+typedef enum {
+	WIN_CMD_CREATE      = 0x6377,
+	WIN_CMD_DESTROY     = 0x6463,
+	WIN_CMD_REGISTER_CB = 0x7263,
+	WIN_CMD_LOOP        = 0x6C6F,
+	WIN_CMD_GET_FB      = 0x6662,
+} win_cmd_t;
 
-	if (win_device == NO_DEVICE) {
+typedef enum {
+	WIN_CB_DRAW,
+	WIN_CB_RESIZE,
+} win_cb_kind_t;
+
+static err_t win_create(win_t* win, size_t x_res, size_t y_res, bool has_fb) {
+	win->device = query_device("aquabsd.black.win");
+
+	if (win->device == NO_DEVICE) {
 		return ERR_NO_DEVICE;
+	}
+
+	win->internal_win = SEND_DEVICE(win->device, WIN_CMD_CREATE, x_res, y_res, has_fb);
+
+	if (!win->internal_win || win->internal_win == INTERNAL_ERROR) {
+		return ERR_INTERNAL;
 	}
 
 	return SUCCESS;
 }
 
-static win_t win_create(uint64_t width, uint64_t height) {
-	return SEND_DEVICE(win_device, 0x6377, width, height);
+static void win_destroy(win_t* win) {
+	SEND_DEVICE(win->device, WIN_CMD_DESTROY, win->internal_win);
 }
 
-static void win_destroy(win_t win) {
-	SEND_DEVICE(win_device, 0x6477, win);
+static err_t win_register_cb(win_t* win, win_cb_kind_t type, int (*cb) (uint64_t _, uint64_t param), void* param) {
+	if (SEND_DEVICE(win->device, WIN_CMD_REGISTER_CB, win->internal_win, type, (uint64_t) cb, (uint64_t) param) == INTERNAL_ERROR) {
+		return ERR_INTERNAL;
+	}
+
+	return SUCCESS;
+}
+
+static err_t win_loop(win_t* win) {
+	if (SEND_DEVICE(win->device, WIN_CMD_LOOP, win->internal_win) == INTERNAL_ERROR) {
+		return ERR_INTERNAL;
+	}
+
+	return SUCCESS;
+}
+
+static uint8_t* win_get_fb(win_t* win) {
+	return (void*) SEND_DEVICE(win->device, WIN_CMD_GET_FB, win->internal_win);
 }
