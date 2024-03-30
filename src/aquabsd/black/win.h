@@ -29,14 +29,21 @@ typedef enum {
 	WIN_CB_RESIZE,
 } win_cb_kind_t;
 
-static err_t win_create(win_t* win, size_t x_res, size_t y_res, bool has_fb) {
+typedef enum {
+	WIN_FLAG_NONE = 0b00,
+	WIN_FLAG_WITH_FB = 0b01,
+	WIN_FLAG_CUSTOM_PRESENTER = 0b10,
+} win_flag_t;
+
+
+static err_t win_create(win_t* win, size_t x_res, size_t y_res, win_flag_t flags) {
 	win->device = query_device("aquabsd.black.win");
 
 	if (win->device == NO_DEVICE) {
 		return ERR_NO_DEVICE;
 	}
 
-	win->internal_win = SEND_DEVICE(win->device, WIN_CMD_CREATE, x_res, y_res, has_fb);
+	win->internal_win = SEND_DEVICE(win->device, WIN_CMD_CREATE, x_res, y_res, flags);
 
 	if (!win->internal_win || win->internal_win == INTERNAL_ERROR) {
 		return ERR_INTERNAL;
