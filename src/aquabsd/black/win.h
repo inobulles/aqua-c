@@ -21,6 +21,7 @@ typedef enum {
 	WIN_CMD_GET_FB      = 0x6662,
 	WIN_CMD_GET_X_RES	  = 0x7872,
 	WIN_CMD_GET_Y_RES	  = 0x7972,
+	WIN_CMD_SET_CAPTION = 0x7363,
 } win_cmd_t;
 
 typedef enum {
@@ -74,4 +75,12 @@ static size_t win_get_x_res(win_t* win) {
 
 static size_t win_get_y_res(win_t* win) {
 	return SEND_DEVICE(win->device, WIN_CMD_GET_Y_RES, win->internal_win);
+}
+
+static err_t win_set_caption(win_t* win, const char* caption) {
+	if (SEND_DEVICE(win->device, WIN_CMD_SET_CAPTION, win->internal_win, (uint64_t) caption) == INTERNAL_ERROR) {
+		return ERR_INTERNAL;
+	}
+
+	return SUCCESS;
 }
