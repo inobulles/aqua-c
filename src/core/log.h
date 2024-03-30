@@ -67,7 +67,7 @@ static void __core_log(log_lvl_t lvl, char const* component, char const* path, c
 }
 
 __attribute__((__format__(__printf__, 6, 0)))
-static void __core_log_vlog(log_lvl_t lvl, char const* component, char const* path, char const* func, uint32_t line, char const* fmt, ...) {
+AQUA_C_FN void __core_log_vlog(log_lvl_t lvl, char const* component, char const* path, char const* func, uint32_t line, char const* fmt, ...) {
 	va_list args;
 	va_start(args, fmt);
 

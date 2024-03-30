@@ -10,6 +10,8 @@
 #define NO_DEVICE ((uint64_t) -1)
 #define INTERNAL_ERROR ((uint64_t) -1)
 
+#define AQUA_C_FN static __attribute__((unused))
+
 typedef enum {
 	SUCCESS = 0,
 	ERR_NO_DEVICE = -1,
@@ -33,7 +35,7 @@ static void must_run_with_aqua_kos(void) {
 	fprintf(stderr, "You must run this program with the AQUA KOS\n");
 }
 
-static device_t query_device(const char* name) {
+AQUA_C_FN device_t query_device(const char* name) {
 	if (!kos_query_device) {
 		must_run_with_aqua_kos();
 		return -1;
@@ -42,7 +44,7 @@ static device_t query_device(const char* name) {
 	return kos_query_device(0, (uint64_t) name);
 }
 
-static uint64_t send_device(device_t device, uint16_t cmd, void* data) {
+AQUA_C_FN uint64_t send_device(device_t device, uint16_t cmd, void* data) {
 	if (!kos_send_device) {
 		must_run_with_aqua_kos();
 		return -1;
@@ -54,7 +56,7 @@ static uint64_t send_device(device_t device, uint16_t cmd, void* data) {
 #define SEND_DEVICE(device, cmd, ...) \
 	(send_device((device), (cmd), (uint64_t[]) { __VA_ARGS__ }))
 
-static char const* err_str(err_t err) {
+AQUA_C_FN char const* err_str(err_t err) {
 	switch (err) {
 	case SUCCESS:       return "success";
 	case ERR_NO_DEVICE: return "no device";

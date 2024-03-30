@@ -25,11 +25,13 @@ typedef enum {
 	FS_CMD_WRITE = 0x7772,
 } fs_cmd_t;
 
-#define FS_OPEN_ERR 0
+typedef enum {
+	FS_OPEN_ERR = 0
+} fs_err_t;
 
 static device_t fs_device = NO_DEVICE;
 
-static fs_descr_t fs_open(char const* drive, char const* path, fs_flags_t flags) {
+AQUA_C_FN fs_descr_t fs_open(char const* drive, char const* path, fs_flags_t flags) {
 	fs_device = query_device("core.fs");
 
 	if (fs_device == NO_DEVICE) {
@@ -39,19 +41,19 @@ static fs_descr_t fs_open(char const* drive, char const* path, fs_flags_t flags)
 	return SEND_DEVICE(fs_device, FS_CMD_OPEN, (uint64_t) drive, (uint64_t) path, flags);
 }
 
-static void fs_close(fs_descr_t descr) {
+AQUA_C_FN void fs_close(fs_descr_t descr) {
 	SEND_DEVICE(fs_device, FS_CMD_CLOSE, descr);
 }
 
-static uint64_t fs_size(fs_descr_t descr) {
+AQUA_C_FN uint64_t fs_size(fs_descr_t descr) {
 	return SEND_DEVICE(fs_device, FS_CMD_SIZE, descr);
 }
 
-static void* fs_mmap(fs_descr_t descr) {
+AQUA_C_FN void* fs_mmap(fs_descr_t descr) {
 	return (void*) SEND_DEVICE(fs_device, FS_CMD_MMAP, descr);
 }
 
-static err_t fs_read(fs_descr_t descr, void* buf, size_t len) {
+AQUA_C_FN err_t fs_read(fs_descr_t descr, void* buf, size_t len) {
 	if (SEND_DEVICE(fs_device, FS_CMD_READ, descr, (uint64_t) buf, len) == INTERNAL_ERROR) {
 		return ERR_INTERNAL;
 	}
@@ -59,7 +61,7 @@ static err_t fs_read(fs_descr_t descr, void* buf, size_t len) {
 	return SUCCESS;
 }
 
-static err_t fs_write(fs_descr_t descr, void const* buf, size_t len) {
+AQUA_C_FN err_t fs_write(fs_descr_t descr, void const* buf, size_t len) {
 	if (SEND_DEVICE(fs_device, FS_CMD_WRITE, descr, (uint64_t) buf, len) == INTERNAL_ERROR) {
 		return ERR_INTERNAL;
 	}
