@@ -19,8 +19,9 @@ typedef enum {
 	WIN_CMD_REGISTER_CB = 0x7263,
 	WIN_CMD_LOOP        = 0x6C6F,
 	WIN_CMD_GET_FB      = 0x6662,
-	WIN_CMD_GET_X_RES	  = 0x7872,
-	WIN_CMD_GET_Y_RES	  = 0x7972,
+	WIN_CMD_GET_DT_MS   = 0x6474,
+	WIN_CMD_GET_X_RES   = 0x7872,
+	WIN_CMD_GET_Y_RES   = 0x7972,
 	WIN_CMD_SET_CAPTION = 0x7363,
 } win_cmd_t;
 
@@ -73,6 +74,10 @@ AQUA_C_FN err_t win_loop(win_t* win) {
 
 AQUA_C_FN uint8_t* win_get_fb(win_t* win) {
 	return (void*) SEND_DEVICE(win->device, WIN_CMD_GET_FB, win->internal_win);
+}
+
+AQUA_C_FN uint64_t win_get_dt_ms(win_t* win) {
+	return SEND_DEVICE(win->device, WIN_CMD_GET_DT_MS, win->internal_win);
 }
 
 AQUA_C_FN size_t win_get_x_res(win_t* win) {
