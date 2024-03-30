@@ -2,6 +2,7 @@
 // Copyright (c) 2023 Aymeric Wibo
 
 #pragma once
+#define AQUABSD_ALPS_WIN
 
 #include <root.h>
 

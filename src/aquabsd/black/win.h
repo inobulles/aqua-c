@@ -2,6 +2,7 @@
 // Copyright (c) 2024 Aymeric Wibo
 
 #pragma once
+#define AQUABSD_BLACK_WIN
 
 #include <root.h>
 
