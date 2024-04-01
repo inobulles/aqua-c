@@ -38,9 +38,23 @@ AQUA_C_FN WGPUSurface wgpu_surface_from_win(WGPUInstance instance, win_t* win) {
 	return (WGPUSurface) send_device(wgpu_device, 0x0000, (void*) &args);
 }
 
-AQUA_C_FN WGPUInstance wgpuCreateInstance(WGPUInstanceDescriptor const * descriptor) {
+#if defined(AQUABSD_BLACK_WM)
+AQUA_C_FN WGPUSurface wgpu_surface_from_wm(WGPUInstance instance, wm_t* wm) {
 	struct {
-		WGPUInstanceDescriptor const * descriptor;
+		WGPUInstance instance;
+		void* wm;
+	} __attribute__((packed)) const args = {
+		.instance = instance,
+		.wm = (void*) wm->internal_wm,
+	};
+
+	return (WGPUSurface) send_device(wgpu_device, 0x0001, (void*) &args);
+}
+#endif
+
+AQUA_C_FN WGPUInstance wgpuCreateInstance(WGPU_NULLABLE WGPUInstanceDescriptor const * descriptor) {
+	struct {
+		WGPU_NULLABLE WGPUInstanceDescriptor const * descriptor;
 	} __attribute__((packed)) const args = {
 		.descriptor = descriptor,
 	};
@@ -72,7 +86,7 @@ AQUA_C_FN size_t wgpuAdapterEnumerateFeatures(WGPUAdapter adapter, WGPUFeatureNa
 	return (size_t) send_device(wgpu_device, 0x1002, (void*) &args);
 }
 
-AQUA_C_FN bool wgpuAdapterGetLimits(WGPUAdapter adapter, WGPUSupportedLimits * limits) {
+AQUA_C_FN WGPUBool wgpuAdapterGetLimits(WGPUAdapter adapter, WGPUSupportedLimits * limits) {
 	struct {
 		WGPUAdapter adapter;
 		WGPUSupportedLimits * limits;
@@ -81,7 +95,7 @@ AQUA_C_FN bool wgpuAdapterGetLimits(WGPUAdapter adapter, WGPUSupportedLimits * l
 		.limits = limits,
 	};
 
-	return (bool) send_device(wgpu_device, 0x1003, (void*) &args);
+	return (WGPUBool) send_device(wgpu_device, 0x1003, (void*) &args);
 }
 
 AQUA_C_FN void wgpuAdapterGetProperties(WGPUAdapter adapter, WGPUAdapterProperties * properties) {
@@ -96,7 +110,7 @@ AQUA_C_FN void wgpuAdapterGetProperties(WGPUAdapter adapter, WGPUAdapterProperti
 	send_device(wgpu_device, 0x1004, (void*) &args);
 }
 
-AQUA_C_FN bool wgpuAdapterHasFeature(WGPUAdapter adapter, WGPUFeatureName feature) {
+AQUA_C_FN WGPUBool wgpuAdapterHasFeature(WGPUAdapter adapter, WGPUFeatureName feature) {
 	struct {
 		WGPUAdapter adapter;
 		WGPUFeatureName feature;
@@ -105,15 +119,29 @@ AQUA_C_FN bool wgpuAdapterHasFeature(WGPUAdapter adapter, WGPUFeatureName featur
 		.feature = feature,
 	};
 
-	return (bool) send_device(wgpu_device, 0x1005, (void*) &args);
+	return (WGPUBool) send_device(wgpu_device, 0x1005, (void*) &args);
 }
 
-AQUA_C_FN void wgpuAdapterRequestDevice(WGPUAdapter adapter, WGPU_NULLABLE WGPUDeviceDescriptor const * descriptor, WGPURequestDeviceCallback callback, void * userdata) {
+AQUA_C_FN void wgpuAdapterRequestAdapterInfo(WGPUAdapter adapter, WGPUAdapterRequestAdapterInfoCallback callback, WGPU_NULLABLE void * userdata) {
+	struct {
+		WGPUAdapter adapter;
+		WGPUAdapterRequestAdapterInfoCallback callback;
+		WGPU_NULLABLE void * userdata;
+	} __attribute__((packed)) const args = {
+		.adapter = adapter,
+		.callback = callback,
+		.userdata = userdata,
+	};
+
+	send_device(wgpu_device, 0x1006, (void*) &args);
+}
+
+AQUA_C_FN void wgpuAdapterRequestDevice(WGPUAdapter adapter, WGPU_NULLABLE WGPUDeviceDescriptor const * descriptor, WGPUAdapterRequestDeviceCallback callback, WGPU_NULLABLE void * userdata) {
 	struct {
 		WGPUAdapter adapter;
 		WGPU_NULLABLE WGPUDeviceDescriptor const * descriptor;
-		WGPURequestDeviceCallback callback;
-		void * userdata;
+		WGPUAdapterRequestDeviceCallback callback;
+		WGPU_NULLABLE void * userdata;
 	} __attribute__((packed)) const args = {
 		.adapter = adapter,
 		.descriptor = descriptor,
@@ -121,7 +149,7 @@ AQUA_C_FN void wgpuAdapterRequestDevice(WGPUAdapter adapter, WGPU_NULLABLE WGPUD
 		.userdata = userdata,
 	};
 
-	send_device(wgpu_device, 0x1006, (void*) &args);
+	send_device(wgpu_device, 0x1007, (void*) &args);
 }
 
 AQUA_C_FN void wgpuAdapterReference(WGPUAdapter adapter) {
@@ -131,7 +159,7 @@ AQUA_C_FN void wgpuAdapterReference(WGPUAdapter adapter) {
 		.adapter = adapter,
 	};
 
-	send_device(wgpu_device, 0x1007, (void*) &args);
+	send_device(wgpu_device, 0x1008, (void*) &args);
 }
 
 AQUA_C_FN void wgpuAdapterRelease(WGPUAdapter adapter) {
@@ -141,7 +169,7 @@ AQUA_C_FN void wgpuAdapterRelease(WGPUAdapter adapter) {
 		.adapter = adapter,
 	};
 
-	send_device(wgpu_device, 0x1008, (void*) &args);
+	send_device(wgpu_device, 0x1009, (void*) &args);
 }
 
 AQUA_C_FN void wgpuBindGroupSetLabel(WGPUBindGroup bindGroup, char const * label) {
@@ -153,7 +181,7 @@ AQUA_C_FN void wgpuBindGroupSetLabel(WGPUBindGroup bindGroup, char const * label
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x1009, (void*) &args);
+	send_device(wgpu_device, 0x100a, (void*) &args);
 }
 
 AQUA_C_FN void wgpuBindGroupReference(WGPUBindGroup bindGroup) {
@@ -163,7 +191,7 @@ AQUA_C_FN void wgpuBindGroupReference(WGPUBindGroup bindGroup) {
 		.bindGroup = bindGroup,
 	};
 
-	send_device(wgpu_device, 0x100a, (void*) &args);
+	send_device(wgpu_device, 0x100b, (void*) &args);
 }
 
 AQUA_C_FN void wgpuBindGroupRelease(WGPUBindGroup bindGroup) {
@@ -173,7 +201,7 @@ AQUA_C_FN void wgpuBindGroupRelease(WGPUBindGroup bindGroup) {
 		.bindGroup = bindGroup,
 	};
 
-	send_device(wgpu_device, 0x100b, (void*) &args);
+	send_device(wgpu_device, 0x100c, (void*) &args);
 }
 
 AQUA_C_FN void wgpuBindGroupLayoutSetLabel(WGPUBindGroupLayout bindGroupLayout, char const * label) {
@@ -185,7 +213,7 @@ AQUA_C_FN void wgpuBindGroupLayoutSetLabel(WGPUBindGroupLayout bindGroupLayout, 
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x100c, (void*) &args);
+	send_device(wgpu_device, 0x100d, (void*) &args);
 }
 
 AQUA_C_FN void wgpuBindGroupLayoutReference(WGPUBindGroupLayout bindGroupLayout) {
@@ -195,7 +223,7 @@ AQUA_C_FN void wgpuBindGroupLayoutReference(WGPUBindGroupLayout bindGroupLayout)
 		.bindGroupLayout = bindGroupLayout,
 	};
 
-	send_device(wgpu_device, 0x100d, (void*) &args);
+	send_device(wgpu_device, 0x100e, (void*) &args);
 }
 
 AQUA_C_FN void wgpuBindGroupLayoutRelease(WGPUBindGroupLayout bindGroupLayout) {
@@ -205,7 +233,7 @@ AQUA_C_FN void wgpuBindGroupLayoutRelease(WGPUBindGroupLayout bindGroupLayout) {
 		.bindGroupLayout = bindGroupLayout,
 	};
 
-	send_device(wgpu_device, 0x100e, (void*) &args);
+	send_device(wgpu_device, 0x100f, (void*) &args);
 }
 
 AQUA_C_FN void wgpuBufferDestroy(WGPUBuffer buffer) {
@@ -215,7 +243,7 @@ AQUA_C_FN void wgpuBufferDestroy(WGPUBuffer buffer) {
 		.buffer = buffer,
 	};
 
-	send_device(wgpu_device, 0x100f, (void*) &args);
+	send_device(wgpu_device, 0x1010, (void*) &args);
 }
 
 AQUA_C_FN void const * wgpuBufferGetConstMappedRange(WGPUBuffer buffer, size_t offset, size_t size) {
@@ -229,7 +257,7 @@ AQUA_C_FN void const * wgpuBufferGetConstMappedRange(WGPUBuffer buffer, size_t o
 		.size = size,
 	};
 
-	return (void const *) send_device(wgpu_device, 0x1010, (void*) &args);
+	return (void const *) send_device(wgpu_device, 0x1011, (void*) &args);
 }
 
 AQUA_C_FN WGPUBufferMapState wgpuBufferGetMapState(WGPUBuffer buffer) {
@@ -239,7 +267,7 @@ AQUA_C_FN WGPUBufferMapState wgpuBufferGetMapState(WGPUBuffer buffer) {
 		.buffer = buffer,
 	};
 
-	return (WGPUBufferMapState) send_device(wgpu_device, 0x1011, (void*) &args);
+	return (WGPUBufferMapState) send_device(wgpu_device, 0x1012, (void*) &args);
 }
 
 AQUA_C_FN void * wgpuBufferGetMappedRange(WGPUBuffer buffer, size_t offset, size_t size) {
@@ -253,7 +281,7 @@ AQUA_C_FN void * wgpuBufferGetMappedRange(WGPUBuffer buffer, size_t offset, size
 		.size = size,
 	};
 
-	return (void *) send_device(wgpu_device, 0x1012, (void*) &args);
+	return (void *) send_device(wgpu_device, 0x1013, (void*) &args);
 }
 
 AQUA_C_FN uint64_t wgpuBufferGetSize(WGPUBuffer buffer) {
@@ -263,7 +291,7 @@ AQUA_C_FN uint64_t wgpuBufferGetSize(WGPUBuffer buffer) {
 		.buffer = buffer,
 	};
 
-	return (uint64_t) send_device(wgpu_device, 0x1013, (void*) &args);
+	return (uint64_t) send_device(wgpu_device, 0x1014, (void*) &args);
 }
 
 AQUA_C_FN WGPUBufferUsageFlags wgpuBufferGetUsage(WGPUBuffer buffer) {
@@ -273,17 +301,17 @@ AQUA_C_FN WGPUBufferUsageFlags wgpuBufferGetUsage(WGPUBuffer buffer) {
 		.buffer = buffer,
 	};
 
-	return (WGPUBufferUsageFlags) send_device(wgpu_device, 0x1014, (void*) &args);
+	return (WGPUBufferUsageFlags) send_device(wgpu_device, 0x1015, (void*) &args);
 }
 
-AQUA_C_FN void wgpuBufferMapAsync(WGPUBuffer buffer, WGPUMapModeFlags mode, size_t offset, size_t size, WGPUBufferMapCallback callback, void * userdata) {
+AQUA_C_FN void wgpuBufferMapAsync(WGPUBuffer buffer, WGPUMapModeFlags mode, size_t offset, size_t size, WGPUBufferMapAsyncCallback callback, WGPU_NULLABLE void * userdata) {
 	struct {
 		WGPUBuffer buffer;
 		WGPUMapModeFlags mode;
 		size_t offset;
 		size_t size;
-		WGPUBufferMapCallback callback;
-		void * userdata;
+		WGPUBufferMapAsyncCallback callback;
+		WGPU_NULLABLE void * userdata;
 	} __attribute__((packed)) const args = {
 		.buffer = buffer,
 		.mode = mode,
@@ -293,7 +321,7 @@ AQUA_C_FN void wgpuBufferMapAsync(WGPUBuffer buffer, WGPUMapModeFlags mode, size
 		.userdata = userdata,
 	};
 
-	send_device(wgpu_device, 0x1015, (void*) &args);
+	send_device(wgpu_device, 0x1016, (void*) &args);
 }
 
 AQUA_C_FN void wgpuBufferSetLabel(WGPUBuffer buffer, char const * label) {
@@ -305,7 +333,7 @@ AQUA_C_FN void wgpuBufferSetLabel(WGPUBuffer buffer, char const * label) {
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x1016, (void*) &args);
+	send_device(wgpu_device, 0x1017, (void*) &args);
 }
 
 AQUA_C_FN void wgpuBufferUnmap(WGPUBuffer buffer) {
@@ -315,7 +343,7 @@ AQUA_C_FN void wgpuBufferUnmap(WGPUBuffer buffer) {
 		.buffer = buffer,
 	};
 
-	send_device(wgpu_device, 0x1017, (void*) &args);
+	send_device(wgpu_device, 0x1018, (void*) &args);
 }
 
 AQUA_C_FN void wgpuBufferReference(WGPUBuffer buffer) {
@@ -325,7 +353,7 @@ AQUA_C_FN void wgpuBufferReference(WGPUBuffer buffer) {
 		.buffer = buffer,
 	};
 
-	send_device(wgpu_device, 0x1018, (void*) &args);
+	send_device(wgpu_device, 0x1019, (void*) &args);
 }
 
 AQUA_C_FN void wgpuBufferRelease(WGPUBuffer buffer) {
@@ -335,7 +363,7 @@ AQUA_C_FN void wgpuBufferRelease(WGPUBuffer buffer) {
 		.buffer = buffer,
 	};
 
-	send_device(wgpu_device, 0x1019, (void*) &args);
+	send_device(wgpu_device, 0x101a, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandBufferSetLabel(WGPUCommandBuffer commandBuffer, char const * label) {
@@ -347,7 +375,7 @@ AQUA_C_FN void wgpuCommandBufferSetLabel(WGPUCommandBuffer commandBuffer, char c
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x101a, (void*) &args);
+	send_device(wgpu_device, 0x101b, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandBufferReference(WGPUCommandBuffer commandBuffer) {
@@ -357,7 +385,7 @@ AQUA_C_FN void wgpuCommandBufferReference(WGPUCommandBuffer commandBuffer) {
 		.commandBuffer = commandBuffer,
 	};
 
-	send_device(wgpu_device, 0x101b, (void*) &args);
+	send_device(wgpu_device, 0x101c, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandBufferRelease(WGPUCommandBuffer commandBuffer) {
@@ -367,7 +395,7 @@ AQUA_C_FN void wgpuCommandBufferRelease(WGPUCommandBuffer commandBuffer) {
 		.commandBuffer = commandBuffer,
 	};
 
-	send_device(wgpu_device, 0x101c, (void*) &args);
+	send_device(wgpu_device, 0x101d, (void*) &args);
 }
 
 AQUA_C_FN WGPUComputePassEncoder wgpuCommandEncoderBeginComputePass(WGPUCommandEncoder commandEncoder, WGPU_NULLABLE WGPUComputePassDescriptor const * descriptor) {
@@ -379,7 +407,7 @@ AQUA_C_FN WGPUComputePassEncoder wgpuCommandEncoderBeginComputePass(WGPUCommandE
 		.descriptor = descriptor,
 	};
 
-	return (WGPUComputePassEncoder) send_device(wgpu_device, 0x101d, (void*) &args);
+	return (WGPUComputePassEncoder) send_device(wgpu_device, 0x101e, (void*) &args);
 }
 
 AQUA_C_FN WGPURenderPassEncoder wgpuCommandEncoderBeginRenderPass(WGPUCommandEncoder commandEncoder, WGPURenderPassDescriptor const * descriptor) {
@@ -391,7 +419,7 @@ AQUA_C_FN WGPURenderPassEncoder wgpuCommandEncoderBeginRenderPass(WGPUCommandEnc
 		.descriptor = descriptor,
 	};
 
-	return (WGPURenderPassEncoder) send_device(wgpu_device, 0x101e, (void*) &args);
+	return (WGPURenderPassEncoder) send_device(wgpu_device, 0x101f, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandEncoderClearBuffer(WGPUCommandEncoder commandEncoder, WGPUBuffer buffer, uint64_t offset, uint64_t size) {
@@ -407,7 +435,7 @@ AQUA_C_FN void wgpuCommandEncoderClearBuffer(WGPUCommandEncoder commandEncoder, 
 		.size = size,
 	};
 
-	send_device(wgpu_device, 0x101f, (void*) &args);
+	send_device(wgpu_device, 0x1020, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandEncoderCopyBufferToBuffer(WGPUCommandEncoder commandEncoder, WGPUBuffer source, uint64_t sourceOffset, WGPUBuffer destination, uint64_t destinationOffset, uint64_t size) {
@@ -427,7 +455,7 @@ AQUA_C_FN void wgpuCommandEncoderCopyBufferToBuffer(WGPUCommandEncoder commandEn
 		.size = size,
 	};
 
-	send_device(wgpu_device, 0x1020, (void*) &args);
+	send_device(wgpu_device, 0x1021, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandEncoderCopyBufferToTexture(WGPUCommandEncoder commandEncoder, WGPUImageCopyBuffer const * source, WGPUImageCopyTexture const * destination, WGPUExtent3D const * copySize) {
@@ -443,7 +471,7 @@ AQUA_C_FN void wgpuCommandEncoderCopyBufferToTexture(WGPUCommandEncoder commandE
 		.copySize = copySize,
 	};
 
-	send_device(wgpu_device, 0x1021, (void*) &args);
+	send_device(wgpu_device, 0x1022, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandEncoderCopyTextureToBuffer(WGPUCommandEncoder commandEncoder, WGPUImageCopyTexture const * source, WGPUImageCopyBuffer const * destination, WGPUExtent3D const * copySize) {
@@ -459,7 +487,7 @@ AQUA_C_FN void wgpuCommandEncoderCopyTextureToBuffer(WGPUCommandEncoder commandE
 		.copySize = copySize,
 	};
 
-	send_device(wgpu_device, 0x1022, (void*) &args);
+	send_device(wgpu_device, 0x1023, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandEncoderCopyTextureToTexture(WGPUCommandEncoder commandEncoder, WGPUImageCopyTexture const * source, WGPUImageCopyTexture const * destination, WGPUExtent3D const * copySize) {
@@ -475,7 +503,7 @@ AQUA_C_FN void wgpuCommandEncoderCopyTextureToTexture(WGPUCommandEncoder command
 		.copySize = copySize,
 	};
 
-	send_device(wgpu_device, 0x1023, (void*) &args);
+	send_device(wgpu_device, 0x1024, (void*) &args);
 }
 
 AQUA_C_FN WGPUCommandBuffer wgpuCommandEncoderFinish(WGPUCommandEncoder commandEncoder, WGPU_NULLABLE WGPUCommandBufferDescriptor const * descriptor) {
@@ -487,7 +515,7 @@ AQUA_C_FN WGPUCommandBuffer wgpuCommandEncoderFinish(WGPUCommandEncoder commandE
 		.descriptor = descriptor,
 	};
 
-	return (WGPUCommandBuffer) send_device(wgpu_device, 0x1024, (void*) &args);
+	return (WGPUCommandBuffer) send_device(wgpu_device, 0x1025, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandEncoderInsertDebugMarker(WGPUCommandEncoder commandEncoder, char const * markerLabel) {
@@ -499,7 +527,7 @@ AQUA_C_FN void wgpuCommandEncoderInsertDebugMarker(WGPUCommandEncoder commandEnc
 		.markerLabel = markerLabel,
 	};
 
-	send_device(wgpu_device, 0x1025, (void*) &args);
+	send_device(wgpu_device, 0x1026, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandEncoderPopDebugGroup(WGPUCommandEncoder commandEncoder) {
@@ -509,7 +537,7 @@ AQUA_C_FN void wgpuCommandEncoderPopDebugGroup(WGPUCommandEncoder commandEncoder
 		.commandEncoder = commandEncoder,
 	};
 
-	send_device(wgpu_device, 0x1026, (void*) &args);
+	send_device(wgpu_device, 0x1027, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandEncoderPushDebugGroup(WGPUCommandEncoder commandEncoder, char const * groupLabel) {
@@ -521,7 +549,7 @@ AQUA_C_FN void wgpuCommandEncoderPushDebugGroup(WGPUCommandEncoder commandEncode
 		.groupLabel = groupLabel,
 	};
 
-	send_device(wgpu_device, 0x1027, (void*) &args);
+	send_device(wgpu_device, 0x1028, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandEncoderResolveQuerySet(WGPUCommandEncoder commandEncoder, WGPUQuerySet querySet, uint32_t firstQuery, uint32_t queryCount, WGPUBuffer destination, uint64_t destinationOffset) {
@@ -541,7 +569,7 @@ AQUA_C_FN void wgpuCommandEncoderResolveQuerySet(WGPUCommandEncoder commandEncod
 		.destinationOffset = destinationOffset,
 	};
 
-	send_device(wgpu_device, 0x1028, (void*) &args);
+	send_device(wgpu_device, 0x1029, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandEncoderSetLabel(WGPUCommandEncoder commandEncoder, char const * label) {
@@ -553,7 +581,7 @@ AQUA_C_FN void wgpuCommandEncoderSetLabel(WGPUCommandEncoder commandEncoder, cha
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x1029, (void*) &args);
+	send_device(wgpu_device, 0x102a, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandEncoderWriteTimestamp(WGPUCommandEncoder commandEncoder, WGPUQuerySet querySet, uint32_t queryIndex) {
@@ -567,7 +595,7 @@ AQUA_C_FN void wgpuCommandEncoderWriteTimestamp(WGPUCommandEncoder commandEncode
 		.queryIndex = queryIndex,
 	};
 
-	send_device(wgpu_device, 0x102a, (void*) &args);
+	send_device(wgpu_device, 0x102b, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandEncoderReference(WGPUCommandEncoder commandEncoder) {
@@ -577,7 +605,7 @@ AQUA_C_FN void wgpuCommandEncoderReference(WGPUCommandEncoder commandEncoder) {
 		.commandEncoder = commandEncoder,
 	};
 
-	send_device(wgpu_device, 0x102b, (void*) &args);
+	send_device(wgpu_device, 0x102c, (void*) &args);
 }
 
 AQUA_C_FN void wgpuCommandEncoderRelease(WGPUCommandEncoder commandEncoder) {
@@ -585,20 +613,6 @@ AQUA_C_FN void wgpuCommandEncoderRelease(WGPUCommandEncoder commandEncoder) {
 		WGPUCommandEncoder commandEncoder;
 	} __attribute__((packed)) const args = {
 		.commandEncoder = commandEncoder,
-	};
-
-	send_device(wgpu_device, 0x102c, (void*) &args);
-}
-
-AQUA_C_FN void wgpuComputePassEncoderBeginPipelineStatisticsQuery(WGPUComputePassEncoder computePassEncoder, WGPUQuerySet querySet, uint32_t queryIndex) {
-	struct {
-		WGPUComputePassEncoder computePassEncoder;
-		WGPUQuerySet querySet;
-		uint32_t queryIndex;
-	} __attribute__((packed)) const args = {
-		.computePassEncoder = computePassEncoder,
-		.querySet = querySet,
-		.queryIndex = queryIndex,
 	};
 
 	send_device(wgpu_device, 0x102d, (void*) &args);
@@ -644,16 +658,6 @@ AQUA_C_FN void wgpuComputePassEncoderEnd(WGPUComputePassEncoder computePassEncod
 	send_device(wgpu_device, 0x1030, (void*) &args);
 }
 
-AQUA_C_FN void wgpuComputePassEncoderEndPipelineStatisticsQuery(WGPUComputePassEncoder computePassEncoder) {
-	struct {
-		WGPUComputePassEncoder computePassEncoder;
-	} __attribute__((packed)) const args = {
-		.computePassEncoder = computePassEncoder,
-	};
-
-	send_device(wgpu_device, 0x1031, (void*) &args);
-}
-
 AQUA_C_FN void wgpuComputePassEncoderInsertDebugMarker(WGPUComputePassEncoder computePassEncoder, char const * markerLabel) {
 	struct {
 		WGPUComputePassEncoder computePassEncoder;
@@ -663,7 +667,7 @@ AQUA_C_FN void wgpuComputePassEncoderInsertDebugMarker(WGPUComputePassEncoder co
 		.markerLabel = markerLabel,
 	};
 
-	send_device(wgpu_device, 0x1032, (void*) &args);
+	send_device(wgpu_device, 0x1031, (void*) &args);
 }
 
 AQUA_C_FN void wgpuComputePassEncoderPopDebugGroup(WGPUComputePassEncoder computePassEncoder) {
@@ -673,7 +677,7 @@ AQUA_C_FN void wgpuComputePassEncoderPopDebugGroup(WGPUComputePassEncoder comput
 		.computePassEncoder = computePassEncoder,
 	};
 
-	send_device(wgpu_device, 0x1033, (void*) &args);
+	send_device(wgpu_device, 0x1032, (void*) &args);
 }
 
 AQUA_C_FN void wgpuComputePassEncoderPushDebugGroup(WGPUComputePassEncoder computePassEncoder, char const * groupLabel) {
@@ -685,7 +689,7 @@ AQUA_C_FN void wgpuComputePassEncoderPushDebugGroup(WGPUComputePassEncoder compu
 		.groupLabel = groupLabel,
 	};
 
-	send_device(wgpu_device, 0x1034, (void*) &args);
+	send_device(wgpu_device, 0x1033, (void*) &args);
 }
 
 AQUA_C_FN void wgpuComputePassEncoderSetBindGroup(WGPUComputePassEncoder computePassEncoder, uint32_t groupIndex, WGPU_NULLABLE WGPUBindGroup group, size_t dynamicOffsetCount, uint32_t const * dynamicOffsets) {
@@ -703,7 +707,7 @@ AQUA_C_FN void wgpuComputePassEncoderSetBindGroup(WGPUComputePassEncoder compute
 		.dynamicOffsets = dynamicOffsets,
 	};
 
-	send_device(wgpu_device, 0x1035, (void*) &args);
+	send_device(wgpu_device, 0x1034, (void*) &args);
 }
 
 AQUA_C_FN void wgpuComputePassEncoderSetLabel(WGPUComputePassEncoder computePassEncoder, char const * label) {
@@ -715,7 +719,7 @@ AQUA_C_FN void wgpuComputePassEncoderSetLabel(WGPUComputePassEncoder computePass
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x1036, (void*) &args);
+	send_device(wgpu_device, 0x1035, (void*) &args);
 }
 
 AQUA_C_FN void wgpuComputePassEncoderSetPipeline(WGPUComputePassEncoder computePassEncoder, WGPUComputePipeline pipeline) {
@@ -727,7 +731,7 @@ AQUA_C_FN void wgpuComputePassEncoderSetPipeline(WGPUComputePassEncoder computeP
 		.pipeline = pipeline,
 	};
 
-	send_device(wgpu_device, 0x1037, (void*) &args);
+	send_device(wgpu_device, 0x1036, (void*) &args);
 }
 
 AQUA_C_FN void wgpuComputePassEncoderReference(WGPUComputePassEncoder computePassEncoder) {
@@ -737,7 +741,7 @@ AQUA_C_FN void wgpuComputePassEncoderReference(WGPUComputePassEncoder computePas
 		.computePassEncoder = computePassEncoder,
 	};
 
-	send_device(wgpu_device, 0x1038, (void*) &args);
+	send_device(wgpu_device, 0x1037, (void*) &args);
 }
 
 AQUA_C_FN void wgpuComputePassEncoderRelease(WGPUComputePassEncoder computePassEncoder) {
@@ -747,7 +751,7 @@ AQUA_C_FN void wgpuComputePassEncoderRelease(WGPUComputePassEncoder computePassE
 		.computePassEncoder = computePassEncoder,
 	};
 
-	send_device(wgpu_device, 0x1039, (void*) &args);
+	send_device(wgpu_device, 0x1038, (void*) &args);
 }
 
 AQUA_C_FN WGPUBindGroupLayout wgpuComputePipelineGetBindGroupLayout(WGPUComputePipeline computePipeline, uint32_t groupIndex) {
@@ -759,7 +763,7 @@ AQUA_C_FN WGPUBindGroupLayout wgpuComputePipelineGetBindGroupLayout(WGPUComputeP
 		.groupIndex = groupIndex,
 	};
 
-	return (WGPUBindGroupLayout) send_device(wgpu_device, 0x103a, (void*) &args);
+	return (WGPUBindGroupLayout) send_device(wgpu_device, 0x1039, (void*) &args);
 }
 
 AQUA_C_FN void wgpuComputePipelineSetLabel(WGPUComputePipeline computePipeline, char const * label) {
@@ -771,7 +775,7 @@ AQUA_C_FN void wgpuComputePipelineSetLabel(WGPUComputePipeline computePipeline, 
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x103b, (void*) &args);
+	send_device(wgpu_device, 0x103a, (void*) &args);
 }
 
 AQUA_C_FN void wgpuComputePipelineReference(WGPUComputePipeline computePipeline) {
@@ -781,7 +785,7 @@ AQUA_C_FN void wgpuComputePipelineReference(WGPUComputePipeline computePipeline)
 		.computePipeline = computePipeline,
 	};
 
-	send_device(wgpu_device, 0x103c, (void*) &args);
+	send_device(wgpu_device, 0x103b, (void*) &args);
 }
 
 AQUA_C_FN void wgpuComputePipelineRelease(WGPUComputePipeline computePipeline) {
@@ -791,7 +795,7 @@ AQUA_C_FN void wgpuComputePipelineRelease(WGPUComputePipeline computePipeline) {
 		.computePipeline = computePipeline,
 	};
 
-	send_device(wgpu_device, 0x103d, (void*) &args);
+	send_device(wgpu_device, 0x103c, (void*) &args);
 }
 
 AQUA_C_FN WGPUBindGroup wgpuDeviceCreateBindGroup(WGPUDevice device, WGPUBindGroupDescriptor const * descriptor) {
@@ -803,7 +807,7 @@ AQUA_C_FN WGPUBindGroup wgpuDeviceCreateBindGroup(WGPUDevice device, WGPUBindGro
 		.descriptor = descriptor,
 	};
 
-	return (WGPUBindGroup) send_device(wgpu_device, 0x103e, (void*) &args);
+	return (WGPUBindGroup) send_device(wgpu_device, 0x103d, (void*) &args);
 }
 
 AQUA_C_FN WGPUBindGroupLayout wgpuDeviceCreateBindGroupLayout(WGPUDevice device, WGPUBindGroupLayoutDescriptor const * descriptor) {
@@ -815,7 +819,7 @@ AQUA_C_FN WGPUBindGroupLayout wgpuDeviceCreateBindGroupLayout(WGPUDevice device,
 		.descriptor = descriptor,
 	};
 
-	return (WGPUBindGroupLayout) send_device(wgpu_device, 0x103f, (void*) &args);
+	return (WGPUBindGroupLayout) send_device(wgpu_device, 0x103e, (void*) &args);
 }
 
 AQUA_C_FN WGPUBuffer wgpuDeviceCreateBuffer(WGPUDevice device, WGPUBufferDescriptor const * descriptor) {
@@ -827,7 +831,7 @@ AQUA_C_FN WGPUBuffer wgpuDeviceCreateBuffer(WGPUDevice device, WGPUBufferDescrip
 		.descriptor = descriptor,
 	};
 
-	return (WGPUBuffer) send_device(wgpu_device, 0x1040, (void*) &args);
+	return (WGPUBuffer) send_device(wgpu_device, 0x103f, (void*) &args);
 }
 
 AQUA_C_FN WGPUCommandEncoder wgpuDeviceCreateCommandEncoder(WGPUDevice device, WGPU_NULLABLE WGPUCommandEncoderDescriptor const * descriptor) {
@@ -839,7 +843,7 @@ AQUA_C_FN WGPUCommandEncoder wgpuDeviceCreateCommandEncoder(WGPUDevice device, W
 		.descriptor = descriptor,
 	};
 
-	return (WGPUCommandEncoder) send_device(wgpu_device, 0x1041, (void*) &args);
+	return (WGPUCommandEncoder) send_device(wgpu_device, 0x1040, (void*) &args);
 }
 
 AQUA_C_FN WGPUComputePipeline wgpuDeviceCreateComputePipeline(WGPUDevice device, WGPUComputePipelineDescriptor const * descriptor) {
@@ -851,15 +855,15 @@ AQUA_C_FN WGPUComputePipeline wgpuDeviceCreateComputePipeline(WGPUDevice device,
 		.descriptor = descriptor,
 	};
 
-	return (WGPUComputePipeline) send_device(wgpu_device, 0x1042, (void*) &args);
+	return (WGPUComputePipeline) send_device(wgpu_device, 0x1041, (void*) &args);
 }
 
-AQUA_C_FN void wgpuDeviceCreateComputePipelineAsync(WGPUDevice device, WGPUComputePipelineDescriptor const * descriptor, WGPUCreateComputePipelineAsyncCallback callback, void * userdata) {
+AQUA_C_FN void wgpuDeviceCreateComputePipelineAsync(WGPUDevice device, WGPUComputePipelineDescriptor const * descriptor, WGPUDeviceCreateComputePipelineAsyncCallback callback, WGPU_NULLABLE void * userdata) {
 	struct {
 		WGPUDevice device;
 		WGPUComputePipelineDescriptor const * descriptor;
-		WGPUCreateComputePipelineAsyncCallback callback;
-		void * userdata;
+		WGPUDeviceCreateComputePipelineAsyncCallback callback;
+		WGPU_NULLABLE void * userdata;
 	} __attribute__((packed)) const args = {
 		.device = device,
 		.descriptor = descriptor,
@@ -867,7 +871,7 @@ AQUA_C_FN void wgpuDeviceCreateComputePipelineAsync(WGPUDevice device, WGPUCompu
 		.userdata = userdata,
 	};
 
-	send_device(wgpu_device, 0x1043, (void*) &args);
+	send_device(wgpu_device, 0x1042, (void*) &args);
 }
 
 AQUA_C_FN WGPUPipelineLayout wgpuDeviceCreatePipelineLayout(WGPUDevice device, WGPUPipelineLayoutDescriptor const * descriptor) {
@@ -879,7 +883,7 @@ AQUA_C_FN WGPUPipelineLayout wgpuDeviceCreatePipelineLayout(WGPUDevice device, W
 		.descriptor = descriptor,
 	};
 
-	return (WGPUPipelineLayout) send_device(wgpu_device, 0x1044, (void*) &args);
+	return (WGPUPipelineLayout) send_device(wgpu_device, 0x1043, (void*) &args);
 }
 
 AQUA_C_FN WGPUQuerySet wgpuDeviceCreateQuerySet(WGPUDevice device, WGPUQuerySetDescriptor const * descriptor) {
@@ -891,7 +895,7 @@ AQUA_C_FN WGPUQuerySet wgpuDeviceCreateQuerySet(WGPUDevice device, WGPUQuerySetD
 		.descriptor = descriptor,
 	};
 
-	return (WGPUQuerySet) send_device(wgpu_device, 0x1045, (void*) &args);
+	return (WGPUQuerySet) send_device(wgpu_device, 0x1044, (void*) &args);
 }
 
 AQUA_C_FN WGPURenderBundleEncoder wgpuDeviceCreateRenderBundleEncoder(WGPUDevice device, WGPURenderBundleEncoderDescriptor const * descriptor) {
@@ -903,7 +907,7 @@ AQUA_C_FN WGPURenderBundleEncoder wgpuDeviceCreateRenderBundleEncoder(WGPUDevice
 		.descriptor = descriptor,
 	};
 
-	return (WGPURenderBundleEncoder) send_device(wgpu_device, 0x1046, (void*) &args);
+	return (WGPURenderBundleEncoder) send_device(wgpu_device, 0x1045, (void*) &args);
 }
 
 AQUA_C_FN WGPURenderPipeline wgpuDeviceCreateRenderPipeline(WGPUDevice device, WGPURenderPipelineDescriptor const * descriptor) {
@@ -915,15 +919,15 @@ AQUA_C_FN WGPURenderPipeline wgpuDeviceCreateRenderPipeline(WGPUDevice device, W
 		.descriptor = descriptor,
 	};
 
-	return (WGPURenderPipeline) send_device(wgpu_device, 0x1047, (void*) &args);
+	return (WGPURenderPipeline) send_device(wgpu_device, 0x1046, (void*) &args);
 }
 
-AQUA_C_FN void wgpuDeviceCreateRenderPipelineAsync(WGPUDevice device, WGPURenderPipelineDescriptor const * descriptor, WGPUCreateRenderPipelineAsyncCallback callback, void * userdata) {
+AQUA_C_FN void wgpuDeviceCreateRenderPipelineAsync(WGPUDevice device, WGPURenderPipelineDescriptor const * descriptor, WGPUDeviceCreateRenderPipelineAsyncCallback callback, WGPU_NULLABLE void * userdata) {
 	struct {
 		WGPUDevice device;
 		WGPURenderPipelineDescriptor const * descriptor;
-		WGPUCreateRenderPipelineAsyncCallback callback;
-		void * userdata;
+		WGPUDeviceCreateRenderPipelineAsyncCallback callback;
+		WGPU_NULLABLE void * userdata;
 	} __attribute__((packed)) const args = {
 		.device = device,
 		.descriptor = descriptor,
@@ -931,7 +935,7 @@ AQUA_C_FN void wgpuDeviceCreateRenderPipelineAsync(WGPUDevice device, WGPURender
 		.userdata = userdata,
 	};
 
-	send_device(wgpu_device, 0x1048, (void*) &args);
+	send_device(wgpu_device, 0x1047, (void*) &args);
 }
 
 AQUA_C_FN WGPUSampler wgpuDeviceCreateSampler(WGPUDevice device, WGPU_NULLABLE WGPUSamplerDescriptor const * descriptor) {
@@ -943,7 +947,7 @@ AQUA_C_FN WGPUSampler wgpuDeviceCreateSampler(WGPUDevice device, WGPU_NULLABLE W
 		.descriptor = descriptor,
 	};
 
-	return (WGPUSampler) send_device(wgpu_device, 0x1049, (void*) &args);
+	return (WGPUSampler) send_device(wgpu_device, 0x1048, (void*) &args);
 }
 
 AQUA_C_FN WGPUShaderModule wgpuDeviceCreateShaderModule(WGPUDevice device, WGPUShaderModuleDescriptor const * descriptor) {
@@ -955,21 +959,7 @@ AQUA_C_FN WGPUShaderModule wgpuDeviceCreateShaderModule(WGPUDevice device, WGPUS
 		.descriptor = descriptor,
 	};
 
-	return (WGPUShaderModule) send_device(wgpu_device, 0x104a, (void*) &args);
-}
-
-AQUA_C_FN WGPUSwapChain wgpuDeviceCreateSwapChain(WGPUDevice device, WGPUSurface surface, WGPUSwapChainDescriptor const * descriptor) {
-	struct {
-		WGPUDevice device;
-		WGPUSurface surface;
-		WGPUSwapChainDescriptor const * descriptor;
-	} __attribute__((packed)) const args = {
-		.device = device,
-		.surface = surface,
-		.descriptor = descriptor,
-	};
-
-	return (WGPUSwapChain) send_device(wgpu_device, 0x104b, (void*) &args);
+	return (WGPUShaderModule) send_device(wgpu_device, 0x1049, (void*) &args);
 }
 
 AQUA_C_FN WGPUTexture wgpuDeviceCreateTexture(WGPUDevice device, WGPUTextureDescriptor const * descriptor) {
@@ -981,7 +971,7 @@ AQUA_C_FN WGPUTexture wgpuDeviceCreateTexture(WGPUDevice device, WGPUTextureDesc
 		.descriptor = descriptor,
 	};
 
-	return (WGPUTexture) send_device(wgpu_device, 0x104c, (void*) &args);
+	return (WGPUTexture) send_device(wgpu_device, 0x104a, (void*) &args);
 }
 
 AQUA_C_FN void wgpuDeviceDestroy(WGPUDevice device) {
@@ -991,7 +981,7 @@ AQUA_C_FN void wgpuDeviceDestroy(WGPUDevice device) {
 		.device = device,
 	};
 
-	send_device(wgpu_device, 0x104d, (void*) &args);
+	send_device(wgpu_device, 0x104b, (void*) &args);
 }
 
 AQUA_C_FN size_t wgpuDeviceEnumerateFeatures(WGPUDevice device, WGPUFeatureName * features) {
@@ -1003,10 +993,10 @@ AQUA_C_FN size_t wgpuDeviceEnumerateFeatures(WGPUDevice device, WGPUFeatureName 
 		.features = features,
 	};
 
-	return (size_t) send_device(wgpu_device, 0x104e, (void*) &args);
+	return (size_t) send_device(wgpu_device, 0x104c, (void*) &args);
 }
 
-AQUA_C_FN bool wgpuDeviceGetLimits(WGPUDevice device, WGPUSupportedLimits * limits) {
+AQUA_C_FN WGPUBool wgpuDeviceGetLimits(WGPUDevice device, WGPUSupportedLimits * limits) {
 	struct {
 		WGPUDevice device;
 		WGPUSupportedLimits * limits;
@@ -1015,7 +1005,7 @@ AQUA_C_FN bool wgpuDeviceGetLimits(WGPUDevice device, WGPUSupportedLimits * limi
 		.limits = limits,
 	};
 
-	return (bool) send_device(wgpu_device, 0x104f, (void*) &args);
+	return (WGPUBool) send_device(wgpu_device, 0x104d, (void*) &args);
 }
 
 AQUA_C_FN WGPUQueue wgpuDeviceGetQueue(WGPUDevice device) {
@@ -1025,10 +1015,10 @@ AQUA_C_FN WGPUQueue wgpuDeviceGetQueue(WGPUDevice device) {
 		.device = device,
 	};
 
-	return (WGPUQueue) send_device(wgpu_device, 0x1050, (void*) &args);
+	return (WGPUQueue) send_device(wgpu_device, 0x104e, (void*) &args);
 }
 
-AQUA_C_FN bool wgpuDeviceHasFeature(WGPUDevice device, WGPUFeatureName feature) {
+AQUA_C_FN WGPUBool wgpuDeviceHasFeature(WGPUDevice device, WGPUFeatureName feature) {
 	struct {
 		WGPUDevice device;
 		WGPUFeatureName feature;
@@ -1037,7 +1027,7 @@ AQUA_C_FN bool wgpuDeviceHasFeature(WGPUDevice device, WGPUFeatureName feature) 
 		.feature = feature,
 	};
 
-	return (bool) send_device(wgpu_device, 0x1051, (void*) &args);
+	return (WGPUBool) send_device(wgpu_device, 0x104f, (void*) &args);
 }
 
 AQUA_C_FN void wgpuDevicePopErrorScope(WGPUDevice device, WGPUErrorCallback callback, void * userdata) {
@@ -1051,7 +1041,7 @@ AQUA_C_FN void wgpuDevicePopErrorScope(WGPUDevice device, WGPUErrorCallback call
 		.userdata = userdata,
 	};
 
-	send_device(wgpu_device, 0x1052, (void*) &args);
+	send_device(wgpu_device, 0x1050, (void*) &args);
 }
 
 AQUA_C_FN void wgpuDevicePushErrorScope(WGPUDevice device, WGPUErrorFilter filter) {
@@ -1063,7 +1053,7 @@ AQUA_C_FN void wgpuDevicePushErrorScope(WGPUDevice device, WGPUErrorFilter filte
 		.filter = filter,
 	};
 
-	send_device(wgpu_device, 0x1053, (void*) &args);
+	send_device(wgpu_device, 0x1051, (void*) &args);
 }
 
 AQUA_C_FN void wgpuDeviceSetLabel(WGPUDevice device, char const * label) {
@@ -1075,7 +1065,7 @@ AQUA_C_FN void wgpuDeviceSetLabel(WGPUDevice device, char const * label) {
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x1054, (void*) &args);
+	send_device(wgpu_device, 0x1052, (void*) &args);
 }
 
 AQUA_C_FN void wgpuDeviceSetUncapturedErrorCallback(WGPUDevice device, WGPUErrorCallback callback, void * userdata) {
@@ -1089,7 +1079,7 @@ AQUA_C_FN void wgpuDeviceSetUncapturedErrorCallback(WGPUDevice device, WGPUError
 		.userdata = userdata,
 	};
 
-	send_device(wgpu_device, 0x1055, (void*) &args);
+	send_device(wgpu_device, 0x1053, (void*) &args);
 }
 
 AQUA_C_FN void wgpuDeviceReference(WGPUDevice device) {
@@ -1099,7 +1089,7 @@ AQUA_C_FN void wgpuDeviceReference(WGPUDevice device) {
 		.device = device,
 	};
 
-	send_device(wgpu_device, 0x1056, (void*) &args);
+	send_device(wgpu_device, 0x1054, (void*) &args);
 }
 
 AQUA_C_FN void wgpuDeviceRelease(WGPUDevice device) {
@@ -1109,7 +1099,7 @@ AQUA_C_FN void wgpuDeviceRelease(WGPUDevice device) {
 		.device = device,
 	};
 
-	send_device(wgpu_device, 0x1057, (void*) &args);
+	send_device(wgpu_device, 0x1055, (void*) &args);
 }
 
 AQUA_C_FN WGPUSurface wgpuInstanceCreateSurface(WGPUInstance instance, WGPUSurfaceDescriptor const * descriptor) {
@@ -1121,7 +1111,19 @@ AQUA_C_FN WGPUSurface wgpuInstanceCreateSurface(WGPUInstance instance, WGPUSurfa
 		.descriptor = descriptor,
 	};
 
-	return (WGPUSurface) send_device(wgpu_device, 0x1058, (void*) &args);
+	return (WGPUSurface) send_device(wgpu_device, 0x1056, (void*) &args);
+}
+
+AQUA_C_FN WGPUBool wgpuInstanceHasWGSLLanguageFeature(WGPUInstance instance, WGPUWGSLFeatureName feature) {
+	struct {
+		WGPUInstance instance;
+		WGPUWGSLFeatureName feature;
+	} __attribute__((packed)) const args = {
+		.instance = instance,
+		.feature = feature,
+	};
+
+	return (WGPUBool) send_device(wgpu_device, 0x1057, (void*) &args);
 }
 
 AQUA_C_FN void wgpuInstanceProcessEvents(WGPUInstance instance) {
@@ -1131,15 +1133,15 @@ AQUA_C_FN void wgpuInstanceProcessEvents(WGPUInstance instance) {
 		.instance = instance,
 	};
 
-	send_device(wgpu_device, 0x1059, (void*) &args);
+	send_device(wgpu_device, 0x1058, (void*) &args);
 }
 
-AQUA_C_FN void wgpuInstanceRequestAdapter(WGPUInstance instance, WGPU_NULLABLE WGPURequestAdapterOptions const * options, WGPURequestAdapterCallback callback, void * userdata) {
+AQUA_C_FN void wgpuInstanceRequestAdapter(WGPUInstance instance, WGPU_NULLABLE WGPURequestAdapterOptions const * options, WGPUInstanceRequestAdapterCallback callback, WGPU_NULLABLE void * userdata) {
 	struct {
 		WGPUInstance instance;
 		WGPU_NULLABLE WGPURequestAdapterOptions const * options;
-		WGPURequestAdapterCallback callback;
-		void * userdata;
+		WGPUInstanceRequestAdapterCallback callback;
+		WGPU_NULLABLE void * userdata;
 	} __attribute__((packed)) const args = {
 		.instance = instance,
 		.options = options,
@@ -1147,7 +1149,7 @@ AQUA_C_FN void wgpuInstanceRequestAdapter(WGPUInstance instance, WGPU_NULLABLE W
 		.userdata = userdata,
 	};
 
-	send_device(wgpu_device, 0x105a, (void*) &args);
+	send_device(wgpu_device, 0x1059, (void*) &args);
 }
 
 AQUA_C_FN void wgpuInstanceReference(WGPUInstance instance) {
@@ -1157,7 +1159,7 @@ AQUA_C_FN void wgpuInstanceReference(WGPUInstance instance) {
 		.instance = instance,
 	};
 
-	send_device(wgpu_device, 0x105b, (void*) &args);
+	send_device(wgpu_device, 0x105a, (void*) &args);
 }
 
 AQUA_C_FN void wgpuInstanceRelease(WGPUInstance instance) {
@@ -1167,7 +1169,7 @@ AQUA_C_FN void wgpuInstanceRelease(WGPUInstance instance) {
 		.instance = instance,
 	};
 
-	send_device(wgpu_device, 0x105c, (void*) &args);
+	send_device(wgpu_device, 0x105b, (void*) &args);
 }
 
 AQUA_C_FN void wgpuPipelineLayoutSetLabel(WGPUPipelineLayout pipelineLayout, char const * label) {
@@ -1179,7 +1181,7 @@ AQUA_C_FN void wgpuPipelineLayoutSetLabel(WGPUPipelineLayout pipelineLayout, cha
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x105d, (void*) &args);
+	send_device(wgpu_device, 0x105c, (void*) &args);
 }
 
 AQUA_C_FN void wgpuPipelineLayoutReference(WGPUPipelineLayout pipelineLayout) {
@@ -1189,7 +1191,7 @@ AQUA_C_FN void wgpuPipelineLayoutReference(WGPUPipelineLayout pipelineLayout) {
 		.pipelineLayout = pipelineLayout,
 	};
 
-	send_device(wgpu_device, 0x105e, (void*) &args);
+	send_device(wgpu_device, 0x105d, (void*) &args);
 }
 
 AQUA_C_FN void wgpuPipelineLayoutRelease(WGPUPipelineLayout pipelineLayout) {
@@ -1199,7 +1201,7 @@ AQUA_C_FN void wgpuPipelineLayoutRelease(WGPUPipelineLayout pipelineLayout) {
 		.pipelineLayout = pipelineLayout,
 	};
 
-	send_device(wgpu_device, 0x105f, (void*) &args);
+	send_device(wgpu_device, 0x105e, (void*) &args);
 }
 
 AQUA_C_FN void wgpuQuerySetDestroy(WGPUQuerySet querySet) {
@@ -1209,7 +1211,7 @@ AQUA_C_FN void wgpuQuerySetDestroy(WGPUQuerySet querySet) {
 		.querySet = querySet,
 	};
 
-	send_device(wgpu_device, 0x1060, (void*) &args);
+	send_device(wgpu_device, 0x105f, (void*) &args);
 }
 
 AQUA_C_FN uint32_t wgpuQuerySetGetCount(WGPUQuerySet querySet) {
@@ -1219,7 +1221,7 @@ AQUA_C_FN uint32_t wgpuQuerySetGetCount(WGPUQuerySet querySet) {
 		.querySet = querySet,
 	};
 
-	return (uint32_t) send_device(wgpu_device, 0x1061, (void*) &args);
+	return (uint32_t) send_device(wgpu_device, 0x1060, (void*) &args);
 }
 
 AQUA_C_FN WGPUQueryType wgpuQuerySetGetType(WGPUQuerySet querySet) {
@@ -1229,7 +1231,7 @@ AQUA_C_FN WGPUQueryType wgpuQuerySetGetType(WGPUQuerySet querySet) {
 		.querySet = querySet,
 	};
 
-	return (WGPUQueryType) send_device(wgpu_device, 0x1062, (void*) &args);
+	return (WGPUQueryType) send_device(wgpu_device, 0x1061, (void*) &args);
 }
 
 AQUA_C_FN void wgpuQuerySetSetLabel(WGPUQuerySet querySet, char const * label) {
@@ -1241,7 +1243,7 @@ AQUA_C_FN void wgpuQuerySetSetLabel(WGPUQuerySet querySet, char const * label) {
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x1063, (void*) &args);
+	send_device(wgpu_device, 0x1062, (void*) &args);
 }
 
 AQUA_C_FN void wgpuQuerySetReference(WGPUQuerySet querySet) {
@@ -1251,7 +1253,7 @@ AQUA_C_FN void wgpuQuerySetReference(WGPUQuerySet querySet) {
 		.querySet = querySet,
 	};
 
-	send_device(wgpu_device, 0x1064, (void*) &args);
+	send_device(wgpu_device, 0x1063, (void*) &args);
 }
 
 AQUA_C_FN void wgpuQuerySetRelease(WGPUQuerySet querySet) {
@@ -1261,21 +1263,21 @@ AQUA_C_FN void wgpuQuerySetRelease(WGPUQuerySet querySet) {
 		.querySet = querySet,
 	};
 
-	send_device(wgpu_device, 0x1065, (void*) &args);
+	send_device(wgpu_device, 0x1064, (void*) &args);
 }
 
-AQUA_C_FN void wgpuQueueOnSubmittedWorkDone(WGPUQueue queue, WGPUQueueWorkDoneCallback callback, void * userdata) {
+AQUA_C_FN void wgpuQueueOnSubmittedWorkDone(WGPUQueue queue, WGPUQueueOnSubmittedWorkDoneCallback callback, WGPU_NULLABLE void * userdata) {
 	struct {
 		WGPUQueue queue;
-		WGPUQueueWorkDoneCallback callback;
-		void * userdata;
+		WGPUQueueOnSubmittedWorkDoneCallback callback;
+		WGPU_NULLABLE void * userdata;
 	} __attribute__((packed)) const args = {
 		.queue = queue,
 		.callback = callback,
 		.userdata = userdata,
 	};
 
-	send_device(wgpu_device, 0x1066, (void*) &args);
+	send_device(wgpu_device, 0x1065, (void*) &args);
 }
 
 AQUA_C_FN void wgpuQueueSetLabel(WGPUQueue queue, char const * label) {
@@ -1287,7 +1289,7 @@ AQUA_C_FN void wgpuQueueSetLabel(WGPUQueue queue, char const * label) {
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x1067, (void*) &args);
+	send_device(wgpu_device, 0x1066, (void*) &args);
 }
 
 AQUA_C_FN void wgpuQueueSubmit(WGPUQueue queue, size_t commandCount, WGPUCommandBuffer const * commands) {
@@ -1301,7 +1303,7 @@ AQUA_C_FN void wgpuQueueSubmit(WGPUQueue queue, size_t commandCount, WGPUCommand
 		.commands = commands,
 	};
 
-	send_device(wgpu_device, 0x1068, (void*) &args);
+	send_device(wgpu_device, 0x1067, (void*) &args);
 }
 
 AQUA_C_FN void wgpuQueueWriteBuffer(WGPUQueue queue, WGPUBuffer buffer, uint64_t bufferOffset, void const * data, size_t size) {
@@ -1319,7 +1321,7 @@ AQUA_C_FN void wgpuQueueWriteBuffer(WGPUQueue queue, WGPUBuffer buffer, uint64_t
 		.size = size,
 	};
 
-	send_device(wgpu_device, 0x1069, (void*) &args);
+	send_device(wgpu_device, 0x1068, (void*) &args);
 }
 
 AQUA_C_FN void wgpuQueueWriteTexture(WGPUQueue queue, WGPUImageCopyTexture const * destination, void const * data, size_t dataSize, WGPUTextureDataLayout const * dataLayout, WGPUExtent3D const * writeSize) {
@@ -1339,7 +1341,7 @@ AQUA_C_FN void wgpuQueueWriteTexture(WGPUQueue queue, WGPUImageCopyTexture const
 		.writeSize = writeSize,
 	};
 
-	send_device(wgpu_device, 0x106a, (void*) &args);
+	send_device(wgpu_device, 0x1069, (void*) &args);
 }
 
 AQUA_C_FN void wgpuQueueReference(WGPUQueue queue) {
@@ -1349,7 +1351,7 @@ AQUA_C_FN void wgpuQueueReference(WGPUQueue queue) {
 		.queue = queue,
 	};
 
-	send_device(wgpu_device, 0x106b, (void*) &args);
+	send_device(wgpu_device, 0x106a, (void*) &args);
 }
 
 AQUA_C_FN void wgpuQueueRelease(WGPUQueue queue) {
@@ -1359,7 +1361,7 @@ AQUA_C_FN void wgpuQueueRelease(WGPUQueue queue) {
 		.queue = queue,
 	};
 
-	send_device(wgpu_device, 0x106c, (void*) &args);
+	send_device(wgpu_device, 0x106b, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleSetLabel(WGPURenderBundle renderBundle, char const * label) {
@@ -1371,7 +1373,7 @@ AQUA_C_FN void wgpuRenderBundleSetLabel(WGPURenderBundle renderBundle, char cons
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x106d, (void*) &args);
+	send_device(wgpu_device, 0x106c, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleReference(WGPURenderBundle renderBundle) {
@@ -1381,7 +1383,7 @@ AQUA_C_FN void wgpuRenderBundleReference(WGPURenderBundle renderBundle) {
 		.renderBundle = renderBundle,
 	};
 
-	send_device(wgpu_device, 0x106e, (void*) &args);
+	send_device(wgpu_device, 0x106d, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleRelease(WGPURenderBundle renderBundle) {
@@ -1391,7 +1393,7 @@ AQUA_C_FN void wgpuRenderBundleRelease(WGPURenderBundle renderBundle) {
 		.renderBundle = renderBundle,
 	};
 
-	send_device(wgpu_device, 0x106f, (void*) &args);
+	send_device(wgpu_device, 0x106e, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleEncoderDraw(WGPURenderBundleEncoder renderBundleEncoder, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) {
@@ -1409,7 +1411,7 @@ AQUA_C_FN void wgpuRenderBundleEncoderDraw(WGPURenderBundleEncoder renderBundleE
 		.firstInstance = firstInstance,
 	};
 
-	send_device(wgpu_device, 0x1070, (void*) &args);
+	send_device(wgpu_device, 0x106f, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleEncoderDrawIndexed(WGPURenderBundleEncoder renderBundleEncoder, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t baseVertex, uint32_t firstInstance) {
@@ -1429,7 +1431,7 @@ AQUA_C_FN void wgpuRenderBundleEncoderDrawIndexed(WGPURenderBundleEncoder render
 		.firstInstance = firstInstance,
 	};
 
-	send_device(wgpu_device, 0x1071, (void*) &args);
+	send_device(wgpu_device, 0x1070, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleEncoderDrawIndexedIndirect(WGPURenderBundleEncoder renderBundleEncoder, WGPUBuffer indirectBuffer, uint64_t indirectOffset) {
@@ -1443,7 +1445,7 @@ AQUA_C_FN void wgpuRenderBundleEncoderDrawIndexedIndirect(WGPURenderBundleEncode
 		.indirectOffset = indirectOffset,
 	};
 
-	send_device(wgpu_device, 0x1072, (void*) &args);
+	send_device(wgpu_device, 0x1071, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleEncoderDrawIndirect(WGPURenderBundleEncoder renderBundleEncoder, WGPUBuffer indirectBuffer, uint64_t indirectOffset) {
@@ -1457,7 +1459,7 @@ AQUA_C_FN void wgpuRenderBundleEncoderDrawIndirect(WGPURenderBundleEncoder rende
 		.indirectOffset = indirectOffset,
 	};
 
-	send_device(wgpu_device, 0x1073, (void*) &args);
+	send_device(wgpu_device, 0x1072, (void*) &args);
 }
 
 AQUA_C_FN WGPURenderBundle wgpuRenderBundleEncoderFinish(WGPURenderBundleEncoder renderBundleEncoder, WGPU_NULLABLE WGPURenderBundleDescriptor const * descriptor) {
@@ -1469,7 +1471,7 @@ AQUA_C_FN WGPURenderBundle wgpuRenderBundleEncoderFinish(WGPURenderBundleEncoder
 		.descriptor = descriptor,
 	};
 
-	return (WGPURenderBundle) send_device(wgpu_device, 0x1074, (void*) &args);
+	return (WGPURenderBundle) send_device(wgpu_device, 0x1073, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleEncoderInsertDebugMarker(WGPURenderBundleEncoder renderBundleEncoder, char const * markerLabel) {
@@ -1481,7 +1483,7 @@ AQUA_C_FN void wgpuRenderBundleEncoderInsertDebugMarker(WGPURenderBundleEncoder 
 		.markerLabel = markerLabel,
 	};
 
-	send_device(wgpu_device, 0x1075, (void*) &args);
+	send_device(wgpu_device, 0x1074, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleEncoderPopDebugGroup(WGPURenderBundleEncoder renderBundleEncoder) {
@@ -1491,7 +1493,7 @@ AQUA_C_FN void wgpuRenderBundleEncoderPopDebugGroup(WGPURenderBundleEncoder rend
 		.renderBundleEncoder = renderBundleEncoder,
 	};
 
-	send_device(wgpu_device, 0x1076, (void*) &args);
+	send_device(wgpu_device, 0x1075, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleEncoderPushDebugGroup(WGPURenderBundleEncoder renderBundleEncoder, char const * groupLabel) {
@@ -1503,7 +1505,7 @@ AQUA_C_FN void wgpuRenderBundleEncoderPushDebugGroup(WGPURenderBundleEncoder ren
 		.groupLabel = groupLabel,
 	};
 
-	send_device(wgpu_device, 0x1077, (void*) &args);
+	send_device(wgpu_device, 0x1076, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleEncoderSetBindGroup(WGPURenderBundleEncoder renderBundleEncoder, uint32_t groupIndex, WGPU_NULLABLE WGPUBindGroup group, size_t dynamicOffsetCount, uint32_t const * dynamicOffsets) {
@@ -1521,7 +1523,7 @@ AQUA_C_FN void wgpuRenderBundleEncoderSetBindGroup(WGPURenderBundleEncoder rende
 		.dynamicOffsets = dynamicOffsets,
 	};
 
-	send_device(wgpu_device, 0x1078, (void*) &args);
+	send_device(wgpu_device, 0x1077, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleEncoderSetIndexBuffer(WGPURenderBundleEncoder renderBundleEncoder, WGPUBuffer buffer, WGPUIndexFormat format, uint64_t offset, uint64_t size) {
@@ -1539,7 +1541,7 @@ AQUA_C_FN void wgpuRenderBundleEncoderSetIndexBuffer(WGPURenderBundleEncoder ren
 		.size = size,
 	};
 
-	send_device(wgpu_device, 0x1079, (void*) &args);
+	send_device(wgpu_device, 0x1078, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleEncoderSetLabel(WGPURenderBundleEncoder renderBundleEncoder, char const * label) {
@@ -1551,7 +1553,7 @@ AQUA_C_FN void wgpuRenderBundleEncoderSetLabel(WGPURenderBundleEncoder renderBun
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x107a, (void*) &args);
+	send_device(wgpu_device, 0x1079, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleEncoderSetPipeline(WGPURenderBundleEncoder renderBundleEncoder, WGPURenderPipeline pipeline) {
@@ -1563,7 +1565,7 @@ AQUA_C_FN void wgpuRenderBundleEncoderSetPipeline(WGPURenderBundleEncoder render
 		.pipeline = pipeline,
 	};
 
-	send_device(wgpu_device, 0x107b, (void*) &args);
+	send_device(wgpu_device, 0x107a, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleEncoderSetVertexBuffer(WGPURenderBundleEncoder renderBundleEncoder, uint32_t slot, WGPU_NULLABLE WGPUBuffer buffer, uint64_t offset, uint64_t size) {
@@ -1581,7 +1583,7 @@ AQUA_C_FN void wgpuRenderBundleEncoderSetVertexBuffer(WGPURenderBundleEncoder re
 		.size = size,
 	};
 
-	send_device(wgpu_device, 0x107c, (void*) &args);
+	send_device(wgpu_device, 0x107b, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleEncoderReference(WGPURenderBundleEncoder renderBundleEncoder) {
@@ -1591,7 +1593,7 @@ AQUA_C_FN void wgpuRenderBundleEncoderReference(WGPURenderBundleEncoder renderBu
 		.renderBundleEncoder = renderBundleEncoder,
 	};
 
-	send_device(wgpu_device, 0x107d, (void*) &args);
+	send_device(wgpu_device, 0x107c, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderBundleEncoderRelease(WGPURenderBundleEncoder renderBundleEncoder) {
@@ -1601,7 +1603,7 @@ AQUA_C_FN void wgpuRenderBundleEncoderRelease(WGPURenderBundleEncoder renderBund
 		.renderBundleEncoder = renderBundleEncoder,
 	};
 
-	send_device(wgpu_device, 0x107e, (void*) &args);
+	send_device(wgpu_device, 0x107d, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderBeginOcclusionQuery(WGPURenderPassEncoder renderPassEncoder, uint32_t queryIndex) {
@@ -1613,21 +1615,7 @@ AQUA_C_FN void wgpuRenderPassEncoderBeginOcclusionQuery(WGPURenderPassEncoder re
 		.queryIndex = queryIndex,
 	};
 
-	send_device(wgpu_device, 0x107f, (void*) &args);
-}
-
-AQUA_C_FN void wgpuRenderPassEncoderBeginPipelineStatisticsQuery(WGPURenderPassEncoder renderPassEncoder, WGPUQuerySet querySet, uint32_t queryIndex) {
-	struct {
-		WGPURenderPassEncoder renderPassEncoder;
-		WGPUQuerySet querySet;
-		uint32_t queryIndex;
-	} __attribute__((packed)) const args = {
-		.renderPassEncoder = renderPassEncoder,
-		.querySet = querySet,
-		.queryIndex = queryIndex,
-	};
-
-	send_device(wgpu_device, 0x1080, (void*) &args);
+	send_device(wgpu_device, 0x107e, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderDraw(WGPURenderPassEncoder renderPassEncoder, uint32_t vertexCount, uint32_t instanceCount, uint32_t firstVertex, uint32_t firstInstance) {
@@ -1645,7 +1633,7 @@ AQUA_C_FN void wgpuRenderPassEncoderDraw(WGPURenderPassEncoder renderPassEncoder
 		.firstInstance = firstInstance,
 	};
 
-	send_device(wgpu_device, 0x1081, (void*) &args);
+	send_device(wgpu_device, 0x107f, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderDrawIndexed(WGPURenderPassEncoder renderPassEncoder, uint32_t indexCount, uint32_t instanceCount, uint32_t firstIndex, int32_t baseVertex, uint32_t firstInstance) {
@@ -1665,7 +1653,7 @@ AQUA_C_FN void wgpuRenderPassEncoderDrawIndexed(WGPURenderPassEncoder renderPass
 		.firstInstance = firstInstance,
 	};
 
-	send_device(wgpu_device, 0x1082, (void*) &args);
+	send_device(wgpu_device, 0x1080, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderDrawIndexedIndirect(WGPURenderPassEncoder renderPassEncoder, WGPUBuffer indirectBuffer, uint64_t indirectOffset) {
@@ -1679,7 +1667,7 @@ AQUA_C_FN void wgpuRenderPassEncoderDrawIndexedIndirect(WGPURenderPassEncoder re
 		.indirectOffset = indirectOffset,
 	};
 
-	send_device(wgpu_device, 0x1083, (void*) &args);
+	send_device(wgpu_device, 0x1081, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderDrawIndirect(WGPURenderPassEncoder renderPassEncoder, WGPUBuffer indirectBuffer, uint64_t indirectOffset) {
@@ -1693,7 +1681,7 @@ AQUA_C_FN void wgpuRenderPassEncoderDrawIndirect(WGPURenderPassEncoder renderPas
 		.indirectOffset = indirectOffset,
 	};
 
-	send_device(wgpu_device, 0x1084, (void*) &args);
+	send_device(wgpu_device, 0x1082, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderEnd(WGPURenderPassEncoder renderPassEncoder) {
@@ -1703,7 +1691,7 @@ AQUA_C_FN void wgpuRenderPassEncoderEnd(WGPURenderPassEncoder renderPassEncoder)
 		.renderPassEncoder = renderPassEncoder,
 	};
 
-	send_device(wgpu_device, 0x1085, (void*) &args);
+	send_device(wgpu_device, 0x1083, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderEndOcclusionQuery(WGPURenderPassEncoder renderPassEncoder) {
@@ -1713,17 +1701,7 @@ AQUA_C_FN void wgpuRenderPassEncoderEndOcclusionQuery(WGPURenderPassEncoder rend
 		.renderPassEncoder = renderPassEncoder,
 	};
 
-	send_device(wgpu_device, 0x1086, (void*) &args);
-}
-
-AQUA_C_FN void wgpuRenderPassEncoderEndPipelineStatisticsQuery(WGPURenderPassEncoder renderPassEncoder) {
-	struct {
-		WGPURenderPassEncoder renderPassEncoder;
-	} __attribute__((packed)) const args = {
-		.renderPassEncoder = renderPassEncoder,
-	};
-
-	send_device(wgpu_device, 0x1087, (void*) &args);
+	send_device(wgpu_device, 0x1084, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderExecuteBundles(WGPURenderPassEncoder renderPassEncoder, size_t bundleCount, WGPURenderBundle const * bundles) {
@@ -1737,7 +1715,7 @@ AQUA_C_FN void wgpuRenderPassEncoderExecuteBundles(WGPURenderPassEncoder renderP
 		.bundles = bundles,
 	};
 
-	send_device(wgpu_device, 0x1088, (void*) &args);
+	send_device(wgpu_device, 0x1085, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderInsertDebugMarker(WGPURenderPassEncoder renderPassEncoder, char const * markerLabel) {
@@ -1749,7 +1727,7 @@ AQUA_C_FN void wgpuRenderPassEncoderInsertDebugMarker(WGPURenderPassEncoder rend
 		.markerLabel = markerLabel,
 	};
 
-	send_device(wgpu_device, 0x1089, (void*) &args);
+	send_device(wgpu_device, 0x1086, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderPopDebugGroup(WGPURenderPassEncoder renderPassEncoder) {
@@ -1759,7 +1737,7 @@ AQUA_C_FN void wgpuRenderPassEncoderPopDebugGroup(WGPURenderPassEncoder renderPa
 		.renderPassEncoder = renderPassEncoder,
 	};
 
-	send_device(wgpu_device, 0x108a, (void*) &args);
+	send_device(wgpu_device, 0x1087, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderPushDebugGroup(WGPURenderPassEncoder renderPassEncoder, char const * groupLabel) {
@@ -1771,7 +1749,7 @@ AQUA_C_FN void wgpuRenderPassEncoderPushDebugGroup(WGPURenderPassEncoder renderP
 		.groupLabel = groupLabel,
 	};
 
-	send_device(wgpu_device, 0x108b, (void*) &args);
+	send_device(wgpu_device, 0x1088, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderSetBindGroup(WGPURenderPassEncoder renderPassEncoder, uint32_t groupIndex, WGPU_NULLABLE WGPUBindGroup group, size_t dynamicOffsetCount, uint32_t const * dynamicOffsets) {
@@ -1789,7 +1767,7 @@ AQUA_C_FN void wgpuRenderPassEncoderSetBindGroup(WGPURenderPassEncoder renderPas
 		.dynamicOffsets = dynamicOffsets,
 	};
 
-	send_device(wgpu_device, 0x108c, (void*) &args);
+	send_device(wgpu_device, 0x1089, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderSetBlendConstant(WGPURenderPassEncoder renderPassEncoder, WGPUColor const * color) {
@@ -1801,7 +1779,7 @@ AQUA_C_FN void wgpuRenderPassEncoderSetBlendConstant(WGPURenderPassEncoder rende
 		.color = color,
 	};
 
-	send_device(wgpu_device, 0x108d, (void*) &args);
+	send_device(wgpu_device, 0x108a, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderSetIndexBuffer(WGPURenderPassEncoder renderPassEncoder, WGPUBuffer buffer, WGPUIndexFormat format, uint64_t offset, uint64_t size) {
@@ -1819,7 +1797,7 @@ AQUA_C_FN void wgpuRenderPassEncoderSetIndexBuffer(WGPURenderPassEncoder renderP
 		.size = size,
 	};
 
-	send_device(wgpu_device, 0x108e, (void*) &args);
+	send_device(wgpu_device, 0x108b, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderSetLabel(WGPURenderPassEncoder renderPassEncoder, char const * label) {
@@ -1831,7 +1809,7 @@ AQUA_C_FN void wgpuRenderPassEncoderSetLabel(WGPURenderPassEncoder renderPassEnc
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x108f, (void*) &args);
+	send_device(wgpu_device, 0x108c, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderSetPipeline(WGPURenderPassEncoder renderPassEncoder, WGPURenderPipeline pipeline) {
@@ -1843,7 +1821,7 @@ AQUA_C_FN void wgpuRenderPassEncoderSetPipeline(WGPURenderPassEncoder renderPass
 		.pipeline = pipeline,
 	};
 
-	send_device(wgpu_device, 0x1090, (void*) &args);
+	send_device(wgpu_device, 0x108d, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderSetScissorRect(WGPURenderPassEncoder renderPassEncoder, uint32_t x, uint32_t y, uint32_t width, uint32_t height) {
@@ -1861,7 +1839,7 @@ AQUA_C_FN void wgpuRenderPassEncoderSetScissorRect(WGPURenderPassEncoder renderP
 		.height = height,
 	};
 
-	send_device(wgpu_device, 0x1091, (void*) &args);
+	send_device(wgpu_device, 0x108e, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderSetStencilReference(WGPURenderPassEncoder renderPassEncoder, uint32_t reference) {
@@ -1873,7 +1851,7 @@ AQUA_C_FN void wgpuRenderPassEncoderSetStencilReference(WGPURenderPassEncoder re
 		.reference = reference,
 	};
 
-	send_device(wgpu_device, 0x1092, (void*) &args);
+	send_device(wgpu_device, 0x108f, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderSetVertexBuffer(WGPURenderPassEncoder renderPassEncoder, uint32_t slot, WGPU_NULLABLE WGPUBuffer buffer, uint64_t offset, uint64_t size) {
@@ -1891,7 +1869,7 @@ AQUA_C_FN void wgpuRenderPassEncoderSetVertexBuffer(WGPURenderPassEncoder render
 		.size = size,
 	};
 
-	send_device(wgpu_device, 0x1093, (void*) &args);
+	send_device(wgpu_device, 0x1090, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderSetViewport(WGPURenderPassEncoder renderPassEncoder, float x, float y, float width, float height, float minDepth, float maxDepth) {
@@ -1913,7 +1891,7 @@ AQUA_C_FN void wgpuRenderPassEncoderSetViewport(WGPURenderPassEncoder renderPass
 		.maxDepth = maxDepth,
 	};
 
-	send_device(wgpu_device, 0x1094, (void*) &args);
+	send_device(wgpu_device, 0x1091, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderReference(WGPURenderPassEncoder renderPassEncoder) {
@@ -1923,7 +1901,7 @@ AQUA_C_FN void wgpuRenderPassEncoderReference(WGPURenderPassEncoder renderPassEn
 		.renderPassEncoder = renderPassEncoder,
 	};
 
-	send_device(wgpu_device, 0x1095, (void*) &args);
+	send_device(wgpu_device, 0x1092, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPassEncoderRelease(WGPURenderPassEncoder renderPassEncoder) {
@@ -1933,7 +1911,7 @@ AQUA_C_FN void wgpuRenderPassEncoderRelease(WGPURenderPassEncoder renderPassEnco
 		.renderPassEncoder = renderPassEncoder,
 	};
 
-	send_device(wgpu_device, 0x1096, (void*) &args);
+	send_device(wgpu_device, 0x1093, (void*) &args);
 }
 
 AQUA_C_FN WGPUBindGroupLayout wgpuRenderPipelineGetBindGroupLayout(WGPURenderPipeline renderPipeline, uint32_t groupIndex) {
@@ -1945,7 +1923,7 @@ AQUA_C_FN WGPUBindGroupLayout wgpuRenderPipelineGetBindGroupLayout(WGPURenderPip
 		.groupIndex = groupIndex,
 	};
 
-	return (WGPUBindGroupLayout) send_device(wgpu_device, 0x1097, (void*) &args);
+	return (WGPUBindGroupLayout) send_device(wgpu_device, 0x1094, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPipelineSetLabel(WGPURenderPipeline renderPipeline, char const * label) {
@@ -1957,7 +1935,7 @@ AQUA_C_FN void wgpuRenderPipelineSetLabel(WGPURenderPipeline renderPipeline, cha
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x1098, (void*) &args);
+	send_device(wgpu_device, 0x1095, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPipelineReference(WGPURenderPipeline renderPipeline) {
@@ -1967,7 +1945,7 @@ AQUA_C_FN void wgpuRenderPipelineReference(WGPURenderPipeline renderPipeline) {
 		.renderPipeline = renderPipeline,
 	};
 
-	send_device(wgpu_device, 0x1099, (void*) &args);
+	send_device(wgpu_device, 0x1096, (void*) &args);
 }
 
 AQUA_C_FN void wgpuRenderPipelineRelease(WGPURenderPipeline renderPipeline) {
@@ -1977,7 +1955,7 @@ AQUA_C_FN void wgpuRenderPipelineRelease(WGPURenderPipeline renderPipeline) {
 		.renderPipeline = renderPipeline,
 	};
 
-	send_device(wgpu_device, 0x109a, (void*) &args);
+	send_device(wgpu_device, 0x1097, (void*) &args);
 }
 
 AQUA_C_FN void wgpuSamplerSetLabel(WGPUSampler sampler, char const * label) {
@@ -1989,7 +1967,7 @@ AQUA_C_FN void wgpuSamplerSetLabel(WGPUSampler sampler, char const * label) {
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x109b, (void*) &args);
+	send_device(wgpu_device, 0x1098, (void*) &args);
 }
 
 AQUA_C_FN void wgpuSamplerReference(WGPUSampler sampler) {
@@ -1999,7 +1977,7 @@ AQUA_C_FN void wgpuSamplerReference(WGPUSampler sampler) {
 		.sampler = sampler,
 	};
 
-	send_device(wgpu_device, 0x109c, (void*) &args);
+	send_device(wgpu_device, 0x1099, (void*) &args);
 }
 
 AQUA_C_FN void wgpuSamplerRelease(WGPUSampler sampler) {
@@ -2009,21 +1987,21 @@ AQUA_C_FN void wgpuSamplerRelease(WGPUSampler sampler) {
 		.sampler = sampler,
 	};
 
-	send_device(wgpu_device, 0x109d, (void*) &args);
+	send_device(wgpu_device, 0x109a, (void*) &args);
 }
 
-AQUA_C_FN void wgpuShaderModuleGetCompilationInfo(WGPUShaderModule shaderModule, WGPUCompilationInfoCallback callback, void * userdata) {
+AQUA_C_FN void wgpuShaderModuleGetCompilationInfo(WGPUShaderModule shaderModule, WGPUShaderModuleGetCompilationInfoCallback callback, WGPU_NULLABLE void * userdata) {
 	struct {
 		WGPUShaderModule shaderModule;
-		WGPUCompilationInfoCallback callback;
-		void * userdata;
+		WGPUShaderModuleGetCompilationInfoCallback callback;
+		WGPU_NULLABLE void * userdata;
 	} __attribute__((packed)) const args = {
 		.shaderModule = shaderModule,
 		.callback = callback,
 		.userdata = userdata,
 	};
 
-	send_device(wgpu_device, 0x109e, (void*) &args);
+	send_device(wgpu_device, 0x109b, (void*) &args);
 }
 
 AQUA_C_FN void wgpuShaderModuleSetLabel(WGPUShaderModule shaderModule, char const * label) {
@@ -2035,7 +2013,7 @@ AQUA_C_FN void wgpuShaderModuleSetLabel(WGPUShaderModule shaderModule, char cons
 		.label = label,
 	};
 
-	send_device(wgpu_device, 0x109f, (void*) &args);
+	send_device(wgpu_device, 0x109c, (void*) &args);
 }
 
 AQUA_C_FN void wgpuShaderModuleReference(WGPUShaderModule shaderModule) {
@@ -2045,7 +2023,7 @@ AQUA_C_FN void wgpuShaderModuleReference(WGPUShaderModule shaderModule) {
 		.shaderModule = shaderModule,
 	};
 
-	send_device(wgpu_device, 0x10a0, (void*) &args);
+	send_device(wgpu_device, 0x109d, (void*) &args);
 }
 
 AQUA_C_FN void wgpuShaderModuleRelease(WGPUShaderModule shaderModule) {
@@ -2053,6 +2031,44 @@ AQUA_C_FN void wgpuShaderModuleRelease(WGPUShaderModule shaderModule) {
 		WGPUShaderModule shaderModule;
 	} __attribute__((packed)) const args = {
 		.shaderModule = shaderModule,
+	};
+
+	send_device(wgpu_device, 0x109e, (void*) &args);
+}
+
+AQUA_C_FN void wgpuSurfaceConfigure(WGPUSurface surface, WGPUSurfaceConfiguration const * config) {
+	struct {
+		WGPUSurface surface;
+		WGPUSurfaceConfiguration const * config;
+	} __attribute__((packed)) const args = {
+		.surface = surface,
+		.config = config,
+	};
+
+	send_device(wgpu_device, 0x109f, (void*) &args);
+}
+
+AQUA_C_FN void wgpuSurfaceGetCapabilities(WGPUSurface surface, WGPUAdapter adapter, WGPUSurfaceCapabilities * capabilities) {
+	struct {
+		WGPUSurface surface;
+		WGPUAdapter adapter;
+		WGPUSurfaceCapabilities * capabilities;
+	} __attribute__((packed)) const args = {
+		.surface = surface,
+		.adapter = adapter,
+		.capabilities = capabilities,
+	};
+
+	send_device(wgpu_device, 0x10a0, (void*) &args);
+}
+
+AQUA_C_FN void wgpuSurfaceGetCurrentTexture(WGPUSurface surface, WGPUSurfaceTexture * surfaceTexture) {
+	struct {
+		WGPUSurface surface;
+		WGPUSurfaceTexture * surfaceTexture;
+	} __attribute__((packed)) const args = {
+		.surface = surface,
+		.surfaceTexture = surfaceTexture,
 	};
 
 	send_device(wgpu_device, 0x10a1, (void*) &args);
@@ -2070,7 +2086,7 @@ AQUA_C_FN WGPUTextureFormat wgpuSurfaceGetPreferredFormat(WGPUSurface surface, W
 	return (WGPUTextureFormat) send_device(wgpu_device, 0x10a2, (void*) &args);
 }
 
-AQUA_C_FN void wgpuSurfaceReference(WGPUSurface surface) {
+AQUA_C_FN void wgpuSurfacePresent(WGPUSurface surface) {
 	struct {
 		WGPUSurface surface;
 	} __attribute__((packed)) const args = {
@@ -2080,6 +2096,38 @@ AQUA_C_FN void wgpuSurfaceReference(WGPUSurface surface) {
 	send_device(wgpu_device, 0x10a3, (void*) &args);
 }
 
+AQUA_C_FN void wgpuSurfaceSetLabel(WGPUSurface surface, char const * label) {
+	struct {
+		WGPUSurface surface;
+		char const * label;
+	} __attribute__((packed)) const args = {
+		.surface = surface,
+		.label = label,
+	};
+
+	send_device(wgpu_device, 0x10a4, (void*) &args);
+}
+
+AQUA_C_FN void wgpuSurfaceUnconfigure(WGPUSurface surface) {
+	struct {
+		WGPUSurface surface;
+	} __attribute__((packed)) const args = {
+		.surface = surface,
+	};
+
+	send_device(wgpu_device, 0x10a5, (void*) &args);
+}
+
+AQUA_C_FN void wgpuSurfaceReference(WGPUSurface surface) {
+	struct {
+		WGPUSurface surface;
+	} __attribute__((packed)) const args = {
+		.surface = surface,
+	};
+
+	send_device(wgpu_device, 0x10a6, (void*) &args);
+}
+
 AQUA_C_FN void wgpuSurfaceRelease(WGPUSurface surface) {
 	struct {
 		WGPUSurface surface;
@@ -2087,44 +2135,14 @@ AQUA_C_FN void wgpuSurfaceRelease(WGPUSurface surface) {
 		.surface = surface,
 	};
 
-	send_device(wgpu_device, 0x10a4, (void*) &args);
-}
-
-AQUA_C_FN WGPUTextureView wgpuSwapChainGetCurrentTextureView(WGPUSwapChain swapChain) {
-	struct {
-		WGPUSwapChain swapChain;
-	} __attribute__((packed)) const args = {
-		.swapChain = swapChain,
-	};
-
-	return (WGPUTextureView) send_device(wgpu_device, 0x10a5, (void*) &args);
-}
-
-AQUA_C_FN void wgpuSwapChainPresent(WGPUSwapChain swapChain) {
-	struct {
-		WGPUSwapChain swapChain;
-	} __attribute__((packed)) const args = {
-		.swapChain = swapChain,
-	};
-
-	send_device(wgpu_device, 0x10a6, (void*) &args);
-}
-
-AQUA_C_FN void wgpuSwapChainReference(WGPUSwapChain swapChain) {
-	struct {
-		WGPUSwapChain swapChain;
-	} __attribute__((packed)) const args = {
-		.swapChain = swapChain,
-	};
-
 	send_device(wgpu_device, 0x10a7, (void*) &args);
 }
 
-AQUA_C_FN void wgpuSwapChainRelease(WGPUSwapChain swapChain) {
+AQUA_C_FN void wgpuSurfaceCapabilitiesFreeMembers(WGPUSurfaceCapabilities surfaceCapabilities) {
 	struct {
-		WGPUSwapChain swapChain;
+		WGPUSurfaceCapabilities surfaceCapabilities;
 	} __attribute__((packed)) const args = {
-		.swapChain = swapChain,
+		.surfaceCapabilities = surfaceCapabilities,
 	};
 
 	send_device(wgpu_device, 0x10a8, (void*) &args);
