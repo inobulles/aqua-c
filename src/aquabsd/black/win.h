@@ -56,8 +56,8 @@ AQUA_C_FN void win_destroy(win_t* win) {
 	SEND_DEVICE(win->device, WIN_CMD_DESTROY, win->internal_win);
 }
 
-AQUA_C_FN err_t win_register_cb(win_t* win, win_cb_kind_t type, int (*cb) (uint64_t _, uint64_t param), void* param) {
-	if (SEND_DEVICE(win->device, WIN_CMD_REGISTER_CB, win->internal_win, type, (uint64_t) cb, (uint64_t) param) == INTERNAL_ERROR) {
+AQUA_C_FN err_t win_register_cb(win_t* win, win_cb_kind_t kind, int (*cb) (uint64_t _, uint64_t param), void* param) {
+	if (SEND_DEVICE(win->device, WIN_CMD_REGISTER_CB, win->internal_win, kind, (uint64_t) cb, (uint64_t) param) == INTERNAL_ERROR) {
 		return ERR_INTERNAL;
 	}
 
